@@ -1,0 +1,24 @@
+# Environment files and secrets
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+
+# Project documents (keep source-code documentation such as README.md)
+*.doc
+*.docx
+*.pdf
+*.odt
+*.rtf
+
+# Dependencies and generated output
+**/node_modules/
+**/dist/
+**/coverage/
+**/.expo/
+*.log
+
+# Local operating-system files
+.DS_Store
+Thumbs.db

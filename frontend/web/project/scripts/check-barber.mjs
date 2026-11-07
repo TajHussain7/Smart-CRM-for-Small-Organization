@@ -1,0 +1,70 @@
+import assert from 'node:assert/strict'
+import { fileURLToPath } from 'node:url'
+import { createServer } from 'vite'
+import React from 'react'
+import { renderToString } from 'react-dom/server'
+const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
+try {
+  for (const path of ['/src/barber/barber-store.js', fileURLToPath(new URL('../../../mobile/my-app/src/components/barber-store.ts', import.meta.url))]) {
+    const store = await server.ssrLoadModule(path)
+    const james = store.getBarber().clients[0]
+    assert.equal(store.filterClients(store.getBarber().clients,'high fade','all')[0].name,'Marcus Thorne')
+    assert.equal(store.filterClients(store.getBarber().clients,'Marcus','shave').length,0)
+    assert.equal(store.filterClients(store.getBarber().clients,'not-a-client','all').length,0)
+    assert.equal(store.visitLabel(undefined),'No visits yet')
+    assert.deepEqual(store.totals(['haircut','shave'],james,false),{subtotal:6000,discount:0,tax:480,total:6480,earned:60})
+    assert.equal(store.totals(['haircut'],james,true).discount,0)
+    assert.match(store.recordService('james',['haircut'],true,'Cash'),/500/)
+    assert.match(store.recordService('james',[],false,'Cash'),/Select/)
+    assert.match(store.addClient({name:'',phone:'x',email:'bad',service:'bad',loyalty:false,notes:''}),/Enter/)
+    assert.equal(store.addClient({name:'New Client',phone:'5559876543',email:'new@example.com',service:'beard',loyalty:true,notes:'Short beard'}),'')
+    assert.match(store.addClient({name:'Duplicate',phone:'5559876543',email:'other@example.com',service:'beard',loyalty:false,notes:''}),/already exists/)
+    assert.equal(store.recordService('alex',['haircut','shave'],true,'Card'),'')
+    assert.equal(store.getBarber().receipts[0].total,5400)
+    assert.equal(store.getBarber().clients.find(c=>c.id==='alex').points,200)
+    assert.equal(store.getBarber().clients.find(c=>c.id==='james').points,450)
+    assert.equal(store.getBarber().clients.find(c=>c.id==='alex').history.length,2)
+    assert.equal(store.getBarber().clients.find(c=>c.id==='james').history,undefined)
+    const marcus = store.getBarber().clients.find(c=>c.id==='sample-0')
+    assert.equal(marcus.history.length,3)
+    assert.equal(store.updateClient(marcus.id,{name:marcus.name,phone:marcus.phone,email:marcus.email,notes:'Updated notes',preferences:['Morning']}),'')
+    assert.equal(store.getBarber().clients.find(c=>c.id===marcus.id).notes,'Updated notes')
+    assert.equal(store.getBarber().clients.find(c=>c.id==='sample-1').notes,'')
+    assert.match(store.updateClient('missing',{...marcus,preferences:[]}),/not found/)
+    assert.match(store.updateClient(marcus.id,{...marcus,email:'invalid',preferences:[]}),/valid/)
+    assert.match(store.updateClient(marcus.id,{...marcus,email:james.email,preferences:[]}),/Another client/)
+
+  }
+  for (const path of ['/src/barber/barber-bookings-store.js', fileURLToPath(new URL('../../../mobile/my-app/src/components/barber-bookings-store.ts', import.meta.url))]) {
+    const store = await server.ssrLoadModule(path)
+    const future = new Date(); future.setDate(future.getDate()+2)
+    const date = store.dateKey(future)
+    assert.equal(store.monthDays(future).length,42)
+    assert.equal(store.slotAvailable(date,'09:00','fade'),true)
+    assert.match(store.bookAppointment('missing','fade',date,'09:00'),/Select/)
+    assert.equal(store.bookAppointment('james','fade',date,'09:00'),'')
+    assert.equal(store.slotAvailable(date,'09:00','haircut'),false)
+    assert.match(store.bookAppointment('alex','haircut',date,'09:00'),/unavailable/)
+    const saved = store.getBookings().at(-1)
+    assert.equal(saved.clientId,'james')
+    store.cancelBooking(saved.id)
+    assert.equal(store.slotAvailable(date,'09:00','fade'),true)
+    assert.equal(store.slotAvailable('2000-01-01','09:00','fade'),false)
+    assert.match(store.reportCsv(),/Average ticket/)
+    assert.match(store.reportHtml(),/Barber Reports/)
+  }
+  const config = await server.ssrLoadModule('/src/workspace-store.js')
+  const {default: Workspace} = await server.ssrLoadModule('/src/dashboard/SchoolWorkspace.jsx')
+  const render = route => renderToString(React.createElement(Workspace,{route}))
+  assert.match(render('#barber-dashboard'),/Student records/)
+  assert.equal(config.saveWorkspace('School',false,[],true,[]),true)
+  assert.match(render('#barber-add-client'),/Client Information/)
+  assert.match(render('#barber-clients'),/href="#barber-client\/sample-0"/)
+  const profile=render('#barber-client/sample-0')
+  assert.match(profile,/Marcus Thorne/);assert.match(profile,/Advanced Color/)
+  assert.match(render('#barber-client/missing'),/Client not found/)
+  assert.match(render('#barber-payments'),/Record Service/)
+  assert.match(render('#barber-reports'),/Reports/)
+  assert.match(render('#barber-appointments'),/Available Time Slots/)
+  console.log('PASS: web/mobile client validation, payment totals, loyalty redemption, isolation, included facilities and shared route aliases')
+} finally { await server.close() }
