@@ -1,0 +1,87 @@
+.school-shell { --school-blue: #0050d5; background: #f6f8fa; min-height: 100vh; color: #171b22; padding-bottom: 90px; }
+.school-shell button { font-family: inherit; }
+.school-header { height: 62px; background: #f8f9fb; border-bottom: 1px solid #e4e7ee; }
+.school-header-inner { max-width: 1160px; margin: auto; display: flex; align-items: center; height: 100%; padding: 0 20px; gap: 14px; }
+.school-header h1 { color: var(--school-blue); font-size: 22px; letter-spacing: -.3px; font-weight: 600; margin: 0; }
+.school-icon-button { background: transparent; border: 0; display: inline-flex; align-items: center; justify-content: center; min-width: 36px; min-height: 40px; color: var(--school-blue); padding: 4px; }
+.school-avatar { margin-left: auto; width: 34px; height: 34px; border-radius: 50%; border: 2px solid #d4e0e7; background: #194b60; color: white; font-size: 11px; font-weight: 600; }
+.school-main { max-width: 1160px; padding: 24px 20px 0; margin: auto; }
+.school-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.school-stat { border: 1px solid #cdd2e3; background: white; border-radius: 10px; padding: 16px; box-shadow: 0 2px 4px #142f5010; }
+.school-stat h2 { font-size: 12px; font-weight: 500; letter-spacing: .7px; color: #343b50; margin: 0 0 8px; }
+.school-stat > div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.school-stat strong { font-size: 34px; line-height: 1; font-weight: 650; color: var(--school-blue); }
+.school-stat svg { color: #087c8d; }
+.school-stat.overdue strong, .school-stat.overdue svg { color: #d70719; }
+.school-actions { margin: 26px 0 38px; }
+.school-actions h2 { font-size: 12px; letter-spacing: 1.3px; font-weight: 500; color: #313749; margin: 0 0 18px; }
+.school-actions > div { display: flex; gap: 38px; }
+.school-actions button { border: 0; background: none; display: flex; align-items: center; flex-direction: column; gap: 10px; color: #1a1d25; font-size: 12px; min-width: 66px; padding: 0; }
+.school-actions button > span { width: 58px; height: 58px; border: 1px solid #ccd1de; background: #e0e4e9; border-radius: 16px; color: var(--school-blue); display: grid; place-items: center; }
+.school-actions button > span.selected { background: #2864ed; border-color: #2864ed; color: white; }
+.school-actions button:hover > span { box-shadow: 0 3px 12px #0050d52b; transform: translateY(-2px); }
+.school-charts { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; }
+.school-panel { border: 1px solid #cdd2e3; border-radius: 11px; box-shadow: 0 2px 4px #142f5010; background: white; padding: 18px 16px; }
+.school-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.school-panel h2, .school-dialog h2 { margin: 0; font-size: 21px; font-weight: 500; letter-spacing: -.5px; }
+.school-panel-heading p { font-size: 11px; margin: 2px 0 0; color: #353b50; }
+.school-panel select { width: auto; height: 34px; border: 1px solid #d4d9e6; border-radius: 7px; font-size: 12px; padding: 0 8px; background: #f7f8fb; color: #1e2431; }
+.school-bars { display: flex; gap: 8px; height: 290px; margin-top: 14px; }
+.school-bar-column { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-end; position: relative; border: 0; background: transparent; padding: 0; }
+.school-bar { display: block; position: relative; background: #cdddf8; border-radius: 2px 2px 0 0; }
+.school-bar-column.current .school-bar { background: #064bcb; }
+.school-bar-label { font-size: 10px; color: #717b8d; padding-top: 6px; text-align: left; }
+.school-tooltip { position: absolute; bottom: calc(100% - 4px); right: 0; background: #2d3237; color: white; border-radius: 4px; padding: 7px 8px; line-height: 1.35; font-size: 10px; text-align: left; z-index: 1; }
+.school-ring { position: relative; width: 180px; height: 180px; margin: 32px auto; }
+.school-ring svg { width: 100%; height: 100%; }
+.school-ring > div { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.school-ring strong { font-size: 24px; font-weight: 600; color: var(--school-blue); }
+.school-ring span { font-size: 12px; color: #3d4351; }
+.school-legend { display: grid; gap: 14px; font-size: 14px; }
+.school-legend > div, .school-legend span { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.school-legend strong { font-weight: 500; }
+.school-legend i { height: 12px; width: 12px; border-radius: 50%; background: #0050d5; }
+.school-legend > div:last-child i { background: #ebedef; }
+.school-schedule { margin-top: 30px; scroll-margin-top: 20px; }
+.school-link { color: var(--school-blue); background: none; border: 0; padding: 8px 0 8px 8px; font-size: 12px; }
+.school-lessons { margin-top: 16px; }
+.school-lesson { display: flex; align-items: center; gap: 14px; padding: 16px 0; border-top: 1px solid #e0e4eb; }
+.school-lesson-icon { width: 42px; height: 42px; background: #e5f2f5; color: #007c91; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; }
+.school-lesson h3 { font-size: 16px; font-weight: 500; margin: 0 0 5px; }
+.school-lesson p { margin: 0; font-size: 11px; color: #4b5165; }
+.school-status { margin-left: auto; background: #e5e7e9; color: #64707c; font-size: 10px; border-radius: 12px; padding: 5px 12px; }
+.school-status.active { background: #e6eeff; color: #0050d5; }
+.school-nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; gap: 60px; height: 64px; background: #f9fafc; border-top: 1px solid #e0e4eb; padding: 7px 20px; z-index: 5; }
+.school-nav button { width: 88px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 0; background: transparent; color: #51586a; font-size: 11px; border-radius: 24px; }
+.school-nav button.active { background: #2864ed; color: white; }
+.school-add { position: fixed; bottom: 98px; right: max(22px, calc((100vw - 1120px) / 2)); width: 58px; height: 58px; border: 0; border-radius: 16px; background: #064bcb; color: white; display: grid; place-items: center; box-shadow: 0 5px 14px #064bcb55; z-index: 4; }
+.school-sample-note { text-align: center; color: #69758a; font-size: 11px; margin-top: 20px; }
+.school-dialog { color: #171b22; border: 1px solid #cdd2e3; border-radius: 16px; padding: 24px; width: min(440px, calc(100vw - 32px)); max-height: 85vh; box-shadow: 0 20px 80px #0003; }
+.school-dialog::backdrop { background: #12213a66; }
+.school-demo, .school-detail-note { font-size: 13px; color: #68758b; line-height: 1.6; }
+.school-menu { display: grid; gap: 8px; margin-top: 20px; }
+.school-menu button, .school-menu a { display: flex; justify-content: space-between; padding: 14px; border: 1px solid #dce2ed; border-radius: 8px; background: #f8faff; color: #0050d5; }
+.school-detail-list { padding-left: 20px; line-height: 2; font-size: 15px; }
+@media(max-width: 640px) {
+  .school-header-inner { padding: 0 14px; gap: 8px; }
+  .school-header h1 { font-size: 21px; }
+  .school-main { padding: 22px 16px 0; }
+  .school-stats { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .school-actions > div { justify-content: space-between; gap: 8px; }
+  .school-charts { grid-template-columns: 1fr; gap: 24px; }
+  .school-schedule { margin-top: 112px; }
+  .school-lesson { gap: 12px; }
+  .school-nav { justify-content: space-between; gap: 6px; padding-inline: 20px; }
+  .school-nav button { width: 82px; }
+}
+@media(max-width: 360px) {
+  .school-main { padding-inline: 12px; }
+  .school-header h1 { font-size: 18px; }
+  .school-stat { padding: 14px 12px; }
+  .school-stat strong { font-size: 29px; }
+  .school-stat h2 { font-size: 10px; }
+  .school-lesson { gap: 8px; }
+  .school-lesson h3 { font-size: 13px; }
+  .school-lesson p { font-size: 9px; }
+  .school-status { padding-inline: 7px; }
+}
