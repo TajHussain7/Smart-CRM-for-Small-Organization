@@ -3,9 +3,11 @@ import { AppointmentStatus } from "../../../common/constants/appointmentStatus";
 
 export interface IAppointment extends Document {
   workspaceId: Types.ObjectId;
-  studentId: Types.ObjectId;
-  assignedStaffId: Types.ObjectId;
-  scheduledAt: Date;
+  clientId: Types.ObjectId;
+  serviceId: Types.ObjectId;
+  barberId: Types.ObjectId;
+  date: string;   // "YYYY-MM-DD"
+  time: string;   // "HH:MM" (24h)
   status: AppointmentStatus;
   notes?: string;
 }
@@ -13,9 +15,11 @@ export interface IAppointment extends Document {
 const appointmentSchema = new Schema<IAppointment>(
   {
     workspaceId: { type: Schema.Types.ObjectId, ref: "Workspace", required: true },
-    studentId: { type: Schema.Types.ObjectId, ref: "Student", required: true },
-    assignedStaffId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    scheduledAt: { type: Date, required: true },
+    clientId:    { type: Schema.Types.ObjectId, ref: "Client",    required: true },
+    serviceId:   { type: Schema.Types.ObjectId, ref: "BarberService", required: true },
+    barberId:    { type: Schema.Types.ObjectId, ref: "User",      required: true },
+    date:   { type: String, required: true },
+    time:   { type: String, required: true },
     status: {
       type: String,
       enum: Object.values(AppointmentStatus),
@@ -26,7 +30,8 @@ const appointmentSchema = new Schema<IAppointment>(
   { timestamps: true }
 );
 
-appointmentSchema.index({ workspaceId: 1, assignedStaffId: 1, scheduledAt: 1 });
-appointmentSchema.index({ workspaceId: 1, studentId: 1 });
+appointmentSchema.index({ workspaceId: 1, barberId: 1, date: 1, time: 1 });
+appointmentSchema.index({ workspaceId: 1, clientId: 1 });
+appointmentSchema.index({ workspaceId: 1, date: 1, status: 1 });
 
 export const Appointment = mongoose.model<IAppointment>("Appointment", appointmentSchema);

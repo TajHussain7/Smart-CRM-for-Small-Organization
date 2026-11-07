@@ -1,9 +1,19 @@
 import { Router } from "express";
-import { create, list, getOne } from "./member.controller";
+import {
+  create,
+  list,
+  getOne,
+  update,
+  renew,
+} from "./member.controller";
 import { authenticate } from "../../../common/middleware/auth.middleware";
 import { attachTenant } from "../../../common/middleware/tenant.middleware";
 import { validate } from "../../../common/middleware/validate.middleware";
-import { createMemberSchema } from "./member.validation";
+import {
+  createMemberSchema,
+  updateMemberSchema,
+  renewMemberSchema,
+} from "./member.validation";
 
 const router = Router();
 
@@ -12,5 +22,7 @@ router.use(authenticate, attachTenant);
 router.post("/", validate(createMemberSchema), create);
 router.get("/", list);
 router.get("/:id", getOne);
+router.patch("/:id", validate(updateMemberSchema), update);
+router.patch("/:id/renew", validate(renewMemberSchema), renew);
 
 export default router;

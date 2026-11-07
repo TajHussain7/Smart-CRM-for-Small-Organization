@@ -7,6 +7,7 @@ const router = Router();
 
 router.use(authenticate, attachTenant);
 
+router.get("/", summary);
 router.get("/summary", summary);
 router.get("/summary/pdf", summaryPdf);
 

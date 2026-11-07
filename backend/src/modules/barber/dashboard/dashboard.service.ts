@@ -6,12 +6,11 @@ import mongoose from "mongoose";
 
 export const getDashboardSummary = async (workspaceId: string) => {
   const today = new Date();
-  const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-  const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+  const todayStr = today.toISOString().split("T")[0];
 
   const appointmentCount = await Appointment.countDocuments({
     workspaceId: new mongoose.Types.ObjectId(workspaceId),
-    scheduledAt: { $gte: startOfDay, $lte: endOfDay },
+    date: todayStr,
     status: { $ne: AppointmentStatus.CANCELLED },
   });
 
@@ -19,7 +18,7 @@ export const getDashboardSummary = async (workspaceId: string) => {
   const workspace = await Workspace.findById(workspaceId);
 
   return {
-    date: startOfDay.toISOString().split("T")[0],
+    date: todayStr,
     todayAppointments: appointmentCount,
     todayRevenue: revenue.totalRevenue,
     todayCompletedPayments: revenue.totalPayments,

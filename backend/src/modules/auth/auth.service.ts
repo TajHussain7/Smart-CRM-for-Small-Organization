@@ -7,7 +7,6 @@ import {
   verifyRefreshToken,
 } from "../../common/utils/jwt";
 import { UserRole } from "../../common/constants/roles";
-import { BusinessType } from "../../common/constants/businessTypes";
 import { ConflictError, UnauthorizedError } from "../../common/errors";
 
 interface RegisterInput {
@@ -15,25 +14,31 @@ interface RegisterInput {
   email: string;
   password: string;
   businessName: string;
-  businessType: BusinessType;
+  schoolEnabled?: boolean;
+  gymEnabled?: boolean;
+  barberEnabled?: boolean;
 }
 
 export const registerUser = async (input: RegisterInput) => {
-  const existingUser = await User.findOne({ email: input.email });
+  const existingUser = await User.findOne({ email: input.email.toLowerCase() });
   if (existingUser) {
     throw new ConflictError("Email already registered");
   }
 
   const workspace = await Workspace.create({
     name: input.businessName,
-    businessType: input.businessType,
+    ownerName: input.name,
+    ownerEmail: input.email.toLowerCase(),
+    schoolEnabled: input.schoolEnabled ?? true,
+    gymEnabled: input.gymEnabled ?? true,
+    barberEnabled: input.barberEnabled ?? true,
   });
 
   const hashedPassword = await hashPassword(input.password);
 
   const user = await User.create({
     name: input.name,
-    email: input.email,
+    email: input.email.toLowerCase(),
     password: hashedPassword,
     role: UserRole.ADMIN,
     workspaceId: workspace._id,
@@ -52,7 +57,7 @@ export const registerUser = async (input: RegisterInput) => {
 };
 
 export const loginUser = async (email: string, password: string) => {
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: email.toLowerCase() });
   if (!user) {
     throw new UnauthorizedError("Invalid email or password");
   }

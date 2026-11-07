@@ -1,82 +1,154 @@
 import { Appointment } from "./appointment.model";
-import { Student } from "../../school/students/student.model";
+import { Client } from "../clients/client.model";
+import { BarberService } from "../services/service.model";
 import { User } from "../../users/user.model";
+import { Notification } from "../../notifications/notification.model";
 import { AppointmentStatus } from "../../../common/constants/appointmentStatus";
-import { UserRole } from "../../../common/constants/roles";
+import { NotificationType } from "../../../common/constants/notificationType";
+import { NotificationChannel } from "../../../common/constants/notificationChannel";
+import { NotificationStatus } from "../../../common/constants/notificationStatus";
 import { ConflictError, NotFoundError, BadRequestError } from "../../../common/errors";
 
-const SLOT_BUFFER_MINUTES = 30;
-const STUDENT_FIELDS = "name classLevel section guardianName guardianPhone";
+const CLIENT_FIELDS = "name phone email loyaltyMember loyaltyTier";
+const SERVICE_FIELDS = "name durationMinutes priceInPaisas";
+const BARBER_FIELDS = "name email";
 
 interface CreateAppointmentInput {
   workspaceId: string;
-  studentId: string;
-  assignedStaffId: string;
-  scheduledAt: string;
+  clientId: string;
+  serviceId: string;
+  barberId: string;
+  date: string; // "YYYY-MM-DD"
+  time: string; // "HH:MM"
   notes?: string;
 }
 
+interface GetAppointmentsFilter {
+  date?: string;
+  status?: AppointmentStatus;
+  barberId?: string;
+}
+
 export const createAppointment = async (input: CreateAppointmentInput) => {
-  // Student isi school (workspace) ka hona chahiye
-  const student = await Student.findOne({ _id: input.studentId, workspaceId: input.workspaceId });
-  if (!student) {
-    throw new NotFoundError("Student not found");
-  }
+  // Validate client belongs to workspace
+  const client = await Client.findOne({
+    _id: input.clientId,
+    workspaceId: input.workspaceId,
+  });
+  if (!client) throw new NotFoundError("Client not found");
 
-  const staff = await User.findOne({ _id: input.assignedStaffId, workspaceId: input.workspaceId });
-  if (!staff) {
-    throw new NotFoundError("Staff member not found");
-  }
-  if (staff.role !== UserRole.STAFF && staff.role !== UserRole.ADMIN) {
-    throw new BadRequestError("Assigned user is not a valid staff member");
-  }
+  // Validate service is active
+  const service = await BarberService.findOne({
+    _id: input.serviceId,
+    workspaceId: input.workspaceId,
+    isActive: true,
+  });
+  if (!service) throw new NotFoundError("Service not found or inactive");
 
-  const requestedTime = new Date(input.scheduledAt);
-  const bufferStart = new Date(requestedTime.getTime() - SLOT_BUFFER_MINUTES * 60000);
-  const bufferEnd = new Date(requestedTime.getTime() + SLOT_BUFFER_MINUTES * 60000);
+  // Validate barber belongs to workspace
+  const barber = await User.findOne({
+    _id: input.barberId,
+    workspaceId: input.workspaceId,
+  });
+  if (!barber) throw new NotFoundError("Barber not found");
 
+  // Check slot conflict: same barber, same date, same time
   const conflict = await Appointment.findOne({
     workspaceId: input.workspaceId,
-    assignedStaffId: input.assignedStaffId,
-    status: { $in: [AppointmentStatus.CONFIRMED, AppointmentStatus.IN_PROGRESS] },
-    scheduledAt: { $gte: bufferStart, $lte: bufferEnd },
+    barberId: input.barberId,
+    date: input.date,
+    time: input.time,
+    status: {
+      $in: [AppointmentStatus.CONFIRMED, AppointmentStatus.IN_PROGRESS],
+    },
   });
 
   if (conflict) {
     throw new ConflictError(
-      `This staff member already has an appointment within ${SLOT_BUFFER_MINUTES} minutes of this time`
+      "This barber already has an appointment at this time slot"
     );
   }
 
-  return Appointment.create({
+  const appointment = await Appointment.create({
     workspaceId: input.workspaceId,
-    studentId: input.studentId,
-    assignedStaffId: input.assignedStaffId,
-    scheduledAt: requestedTime,
+    clientId: input.clientId,
+    serviceId: input.serviceId,
+    barberId: input.barberId,
+    date: input.date,
+    time: input.time,
     notes: input.notes,
   });
-};
 
-export const getAppointments = async (workspaceId: string) => {
-  return Appointment.find({ workspaceId })
-    .populate("studentId", STUDENT_FIELDS)
-    .populate("assignedStaffId", "name email")
-    .sort({ scheduledAt: 1 });
-};
+  // Increment bookings count on the service
+  await BarberService.findByIdAndUpdate(service._id, {
+    $inc: { bookingsCount: 1 },
+  });
 
-export const getAppointmentById = async (workspaceId: string, appointmentId: string) => {
-  const appointment = await Appointment.findOne({ _id: appointmentId, workspaceId })
-    .populate("studentId", STUDENT_FIELDS)
-    .populate("assignedStaffId", "name email");
-  if (!appointment) {
-    throw new NotFoundError("Appointment not found");
+  // Queue reminder alert (idempotent via eventId)
+  if (client.phone) {
+    const eventId = `appt:${appointment._id.toString()}`;
+    await Notification.findOneAndUpdate(
+      { eventId },
+      {
+        workspaceId: input.workspaceId,
+        module: "barber",
+        eventId,
+        type: NotificationType.APPOINTMENT_REMINDER,
+        recipient: client.name,
+        contact: client.phone,
+        message: `Hi ${client.name}, your appointment for ${service.name} is scheduled on ${input.date} at ${input.time}. We look forward to seeing you!`,
+        channel: NotificationChannel.WHATSAPP,
+        status: NotificationStatus.PENDING,
+      },
+      { upsert: true, new: true }
+    );
   }
+
+  return appointment;
+};
+
+export const getAppointments = async (
+  workspaceId: string,
+  filters: GetAppointmentsFilter = {}
+) => {
+  const filter: Record<string, unknown> = { workspaceId };
+  if (filters.date) filter.date = filters.date;
+  if (filters.status) filter.status = filters.status;
+  if (filters.barberId) filter.barberId = filters.barberId;
+
+  return Appointment.find(filter)
+    .populate("clientId", CLIENT_FIELDS)
+    .populate("serviceId", SERVICE_FIELDS)
+    .populate("barberId", BARBER_FIELDS)
+    .sort({ date: 1, time: 1 });
+};
+
+export const getAppointmentById = async (
+  workspaceId: string,
+  appointmentId: string
+) => {
+  const appointment = await Appointment.findOne({
+    _id: appointmentId,
+    workspaceId,
+  })
+    .populate("clientId", CLIENT_FIELDS)
+    .populate("serviceId", SERVICE_FIELDS)
+    .populate("barberId", BARBER_FIELDS);
+
+  if (!appointment) throw new NotFoundError("Appointment not found");
   return appointment;
 };
 
 const VALID_TRANSITIONS: Record<AppointmentStatus, AppointmentStatus[]> = {
-  [AppointmentStatus.CONFIRMED]: [AppointmentStatus.IN_PROGRESS, AppointmentStatus.NO_SHOW, AppointmentStatus.CANCELLED],
-  [AppointmentStatus.IN_PROGRESS]: [AppointmentStatus.COMPLETED, AppointmentStatus.CANCELLED],
+  [AppointmentStatus.CONFIRMED]: [
+    AppointmentStatus.IN_PROGRESS,
+    AppointmentStatus.NO_SHOW,
+    AppointmentStatus.CANCELLED,
+  ],
+  [AppointmentStatus.IN_PROGRESS]: [
+    AppointmentStatus.COMPLETED,
+    AppointmentStatus.CANCELLED,
+  ],
   [AppointmentStatus.COMPLETED]: [],
   [AppointmentStatus.NO_SHOW]: [],
   [AppointmentStatus.CANCELLED]: [],
@@ -87,14 +159,17 @@ export const updateAppointmentStatus = async (
   appointmentId: string,
   newStatus: AppointmentStatus
 ) => {
-  const appointment = await Appointment.findOne({ _id: appointmentId, workspaceId });
-  if (!appointment) {
-    throw new NotFoundError("Appointment not found");
-  }
+  const appointment = await Appointment.findOne({
+    _id: appointmentId,
+    workspaceId,
+  });
+  if (!appointment) throw new NotFoundError("Appointment not found");
 
   const allowedNext = VALID_TRANSITIONS[appointment.status];
   if (!allowedNext.includes(newStatus)) {
-    throw new BadRequestError(`Cannot change status from ${appointment.status} to ${newStatus}`);
+    throw new BadRequestError(
+      `Cannot change status from ${appointment.status} to ${newStatus}`
+    );
   }
 
   appointment.status = newStatus;

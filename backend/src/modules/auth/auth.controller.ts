@@ -10,7 +10,13 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       accessToken,
       refreshToken,
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
-      workspace: { id: workspace._id, name: workspace.name, businessType: workspace.businessType },
+      workspace: {
+        id: workspace._id,
+        name: workspace.name,
+        schoolEnabled: workspace.schoolEnabled,
+        gymEnabled: workspace.gymEnabled,
+        barberEnabled: workspace.barberEnabled,
+      },
     });
   } catch (error) {
     next(error);
