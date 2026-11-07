@@ -1,0 +1,34 @@
+{
+  "stats": [
+    {"label":"Total Students","value":"120","icon":"people"},
+    {"label":"Monthly Revenue","value":"$12.4K","icon":"money"},
+    {"label":"Pending Fees","value":"15","icon":"fees"},
+    {"label":"Classes Today","value":"8","icon":"calendar"}
+  ],
+  "actions": [
+    {"label":"Students","icon":"students"},
+    {"label":"Fee Mgt","icon":"fees"},
+    {"label":"Reports","icon":"reports"},
+    {"label":"Timetable","icon":"calendar"}
+  ],
+  "schedule": [
+    {"title":"Mathematics 101","time":"09:00 AM - 10:30 AM","room":"Room 4B","status":"Active","icon":"book"},
+    {"title":"Advanced Chemistry","time":"11:00 AM - 12:30 PM","room":"Lab 2","status":"Pending","icon":"flask"},
+    {"title":"World History","time":"02:00 PM - 03:30 PM","room":"Room 1A","status":"Pending","icon":"history"},
+    {"title":"English Literature","time":"03:30 PM - 04:15 PM","room":"Room 3A","status":"Pending","icon":"book"},
+    {"title":"Computer Science","time":"04:15 PM - 05:00 PM","room":"Lab 1","status":"Pending","icon":"book"},
+    {"title":"Physics","time":"05:00 PM - 05:45 PM","room":"Lab 2","status":"Pending","icon":"flask"},
+    {"title":"Art & Design","time":"05:45 PM - 06:30 PM","room":"Room 2B","status":"Pending","icon":"book"},
+    {"title":"Study Skills","time":"06:30 PM - 07:00 PM","room":"Room 4B","status":"Pending","icon":"book"}
+  ],
+  "monthly": {"labels":["Jan","Feb","Mar","Apr","May","Jun"],"values":[4.8,6.6,5.4,8.4,10.2,12.4]},
+  "weekly": {"labels":["Mon","Tue","Wed","Thu","Fri","Sat"],"values":[1.1,1.8,1.4,2.2,2.7,3.2]},
+  "sections": {
+    "Students": ["120 total students","24 new enrolments","96 returning students"],
+    "Fee Mgt": ["15 payments pending","Monthly revenue: $12.4K","Connect the fee API to view individual balances."],
+    "Reports": ["Revenue increased across the last 6 months.","Student growth: +12% — target met.","24 new and 96 returning students."],
+    "Tasks": ["Review pending fee payments","Prepare this week’s class timetable","Follow up on new enrolments"],
+    "Alerts": ["15 student fees are pending.","8 classes are scheduled today."],
+    "Profile": ["School Administrator","School workspace","Account details will appear after sign-in."]
+  }
+}

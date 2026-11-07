@@ -1,0 +1,8 @@
+import { useState } from 'react';
+import { Pressable, View } from 'react-native';
+import { router } from 'expo-router';
+import { Text, TextInput } from '@/components/responsive-text';
+import { WorkspacePage, Select, ui } from '@/components/workspace-ui';
+import { admitStudent, type Admission } from '@/components/school/admission-store';
+const empty:Admission={id:'',name:'',grade:'',guardian:'',email:'',phone:'',address:''};
+export default function AdmissionPage(){const [draft,setDraft]=useState(empty),[error,setError]=useState('');return <WorkspacePage title="Student Admission"><Text style={ui.note}>Admit a student for School and Gym facilities. Records last for this demo session.</Text><View style={ui.card}>{([['id','Student ID'],['name','Full Name'],['guardian','Parent / Guardian'],['email','Guardian Email'],['phone','Guardian Phone'],['address','Address']] as const).map(([key,label])=><View key={key} style={{gap:8}}><Text>{label}</Text><TextInput accessibilityLabel={label} style={ui.input} value={draft[key]} onChangeText={value=>setDraft({...draft,[key]:value})} keyboardType={key==='email'?'email-address':key==='phone'?'phone-pad':'default'} autoCapitalize={key==='email'?'none':'words'}/></View>)}<Select label="Class" value={draft.grade} options={['9th','10th','11th','12th'].map(value=>({value,label:value}))} onChange={grade=>setDraft({...draft,grade})}/></View>{!!error&&<Text accessibilityRole="alert">{error}</Text>}<Pressable style={ui.button} onPress={()=>{const issue=admitStudent(draft);if(issue)setError(issue);else router.replace({pathname:'/student/[id]',params:{id:draft.id.trim()}});}}><Text style={ui.white}>Admit Student</Text></Pressable></WorkspacePage>;}

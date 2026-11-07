@@ -1,0 +1,8 @@
+import { useState } from 'react'
+import { useBarber, services, clientStyle, visitLabel, filterClients } from './barber-store'
+export default function ClientList() {
+  const {clients}=useBarber()
+  const [query,setQuery]=useState(''),[service,setService]=useState('all')
+  const visible=filterClients(clients,query,service)
+  return <div className="bc-list"><section className="bc-hero"><div><h2>Manage your clientele</h2><p>You have {clients.length} client profiles in this demo. Keep track of preferences and visit history.</p></div><a href="#barber-add-client" className="g-button secondary">+ Add Client</a></section><section className="g-panel"><div className="bc-tools"><input aria-label="Search clients by name or style" placeholder="Search by name or style..." value={query} onChange={e=>setQuery(e.target.value)}/><select aria-label="Filter clients by primary service" value={service} onChange={e=>setService(e.target.value)}><option value="all">All services</option>{services.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div><p className="g-muted">{visible.length} clients · Sample visit history</p><div className="bc-grid">{visible.map(c=><a className="bc-card" key={c.id} href={`#barber-client/${c.id}`} aria-label={`View ${c.name} profile`}><span className="bc-avatar">{c.name.split(' ').slice(0,2).map(n=>n[0]).join('')}</span><div className="bc-identity"><h3>{c.name}</h3><p>{clientStyle(c)}</p></div><div className="bc-visit"><small>LAST VISIT</small><span>{visitLabel(c.lastVisit)}</span></div></a>)}</div>{!visible.length && <p className="g-empty">No clients match your search or filter.</p>}</section></div>
+}
