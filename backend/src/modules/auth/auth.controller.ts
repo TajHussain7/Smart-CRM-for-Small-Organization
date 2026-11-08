@@ -26,11 +26,18 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
-    const { user, accessToken, refreshToken } = await loginUser(email, password);
+    const { user, workspace, accessToken, refreshToken } = await loginUser(email, password);
     return sendSuccess(res, 200, "Login successful", {
       accessToken,
       refreshToken,
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      workspace: {
+        id: workspace._id,
+        name: workspace.name,
+        schoolEnabled: workspace.schoolEnabled,
+        gymEnabled: workspace.gymEnabled,
+        barberEnabled: workspace.barberEnabled,
+      },
     });
   } catch (error) {
     next(error);

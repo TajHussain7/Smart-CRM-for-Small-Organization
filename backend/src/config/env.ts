@@ -6,8 +6,12 @@ export const env = {
   mongoUri: (process.env.MONGO_URI || process.env.MONGODB_URI) as string,
   jwtSecret: process.env.JWT_SECRET as string,
   jwtRefreshSecret: (process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET) as string,
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "15m",
+  jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "30d",
   nodeEnv: process.env.NODE_ENV || "development",
-  corsOrigin: process.env.CORS_ORIGIN || "*",
+  // CORS_ORIGIN can be a comma-separated list of allowed origins
+  // e.g. "http://localhost:5173,https://your-app.vercel.app"
+  corsOrigin: process.env.CORS_ORIGIN || "http://localhost:5173",
   notificationProvider: process.env.NOTIFICATION_PROVIDER || "mock",
   whatsappApiUrl: process.env.WHATSAPP_API_URL,
   whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,

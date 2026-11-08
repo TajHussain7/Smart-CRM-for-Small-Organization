@@ -67,6 +67,11 @@ export const loginUser = async (email: string, password: string) => {
     throw new UnauthorizedError("Invalid email or password");
   }
 
+  const workspace = await Workspace.findById(user.workspaceId);
+  if (!workspace) {
+    throw new UnauthorizedError("Workspace not found");
+  }
+
   const payload = {
     userId: user._id.toString(),
     workspaceId: user.workspaceId.toString(),
@@ -76,7 +81,7 @@ export const loginUser = async (email: string, password: string) => {
   const accessToken = signAccessToken(payload);
   const refreshToken = signRefreshToken(payload);
 
-  return { user, accessToken, refreshToken };
+  return { user, workspace, accessToken, refreshToken };
 };
 
 export const refreshAccessToken = (refreshToken: string) => {
