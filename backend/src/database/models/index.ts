@@ -1,0 +1,17 @@
+export { User } from "../../modules/users/user.model";
+export { Workspace } from "../../modules/workspaces/workspace.model";
+export { Task } from "../../modules/tasks/task.model";
+export { Student } from "../../modules/school/students/student.model";
+export { Teacher } from "../../modules/school/teachers/teacher.model";
+export { Attendance } from "../../modules/school/attendance/attendance.model";
+export { Invoice } from "../../modules/school/invoices/invoice.model";
+export { FeePayment } from "../../modules/school/invoices/payment.model";
+export { ClassSchedule } from "../../modules/school/schedule/classSchedule.model";
+export { Client } from "../../modules/barber/clients/client.model";
+export { BarberService } from "../../modules/barber/services/service.model";
+export { Appointment } from "../../modules/barber/appointments/appointment.model";
+export { Payment } from "../../modules/barber/payments/payment.model";
+export { Member } from "../../modules/gym/members/member.model";
+export { TrainingSession } from "../../modules/gym/sessions/session.model";
+export { Notification } from "../../modules/notifications/notification.model";
+export { Interaction } from "../../modules/interactions/interaction.model";
