@@ -157,15 +157,20 @@ export default function App() {
   }
 
   // ─── Route-based rendering ────────────────────────────────────────────────
+  const handleLogout = () => {
+    clearAuthSession()
+    logout()
+  }
+
   if (isAuthenticated) {
     if (route.startsWith('#school-') || route === '#students' || route.startsWith('#student/')) {
-      return <SchoolWorkspace route={route} onLogout={() => { clearAuthSession(); location.hash = '#login' }} />
+      return <SchoolWorkspace route={route} onLogout={handleLogout} />
     }
     if (route.startsWith('#barber-')) {
-      return <SchoolWorkspace route={route} onLogout={() => { clearAuthSession(); location.hash = '#login' }} />
+      return <SchoolWorkspace route={route} onLogout={handleLogout} />
     }
     if (route.startsWith('#gym-')) {
-      return <SchoolWorkspace route={route} onLogout={() => { clearAuthSession(); location.hash = '#login' }} />
+      return <SchoolWorkspace route={route} onLogout={handleLogout} />
     }
   }
 
