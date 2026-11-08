@@ -5,3 +5,5 @@ button, input, select { font: inherit; }
 button, select { cursor: pointer; }
 a { color: #0054ed; text-decoration: none; }
 button:focus-visible, a:focus-visible { outline: 3px solid #8ab4ff; outline-offset: 4px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.notice.error { color: #c0392b; }

@@ -1,0 +1,79 @@
+name: CD — Deploy to Render & Vercel
+
+# ─── Triggers ─────────────────────────────────────────────────────────────────
+# Only runs when code is pushed (or merged) directly into develop or main.
+on:
+  push:
+    branches:
+      - develop
+      - main
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 1: Deploy Backend to Render
+  # Uses Render deploy hooks (one per environment).
+  # The deploy hook URL triggers Render to pull the latest code and redeploy.
+  # ─────────────────────────────────────────────────────────────────────────────
+  deploy-backend:
+    name: Deploy Backend → Render
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Render (develop)
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          curl -f -X POST "${{ secrets.RENDER_DEV_DEPLOY_HOOK }}"
+
+      - name: Deploy to Render (main / production)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          curl -f -X POST "${{ secrets.RENDER_PROD_DEPLOY_HOOK }}"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 2: Deploy Frontend to Vercel
+  # Uses the Vercel CLI to deploy the web project.
+  # Staging (develop) deploys as a preview; main deploys to production.
+  # ─────────────────────────────────────────────────────────────────────────────
+  deploy-frontend:
+    name: Deploy Frontend → Vercel
+    runs-on: ubuntu-latest
+    needs: deploy-backend   # Wait for backend to trigger first
+
+    defaults:
+      run:
+        working-directory: frontend/web/project
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/web/project/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel project settings
+        run: vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build project artifacts
+        run: vercel build ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy to Vercel
+        run: vercel deploy --prebuilt ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
