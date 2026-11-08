@@ -59,3 +59,4 @@ export function clearAuthSession() {
   state = { user: null, workspace: null, isAuthenticated: false, isLoading: false, error: null };
   emit();
 }
+
