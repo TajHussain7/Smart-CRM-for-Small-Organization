@@ -9,8 +9,8 @@ let state = {
     teachers: [{ id: 'T001', name: 'Daniel Carter', email: 'daniel.carter@example.com', subject: 'Mathematics' }],
     lessons: [
         { id: 'L1', teacherId: 'T001', date: localDate(), title: 'Mathematics 101', grade: '10-B', room: 'Room 4B', start: '09:00', end: '10:30' },
-        { id: 'L2', teacherId: 'T001', date: localDate(), title: 'Advanced Calculus', grade: '12-A', room: 'Room 1C', start: '11:00', end: '12:30' },
-        { id: 'L3', teacherId: 'T001', date: localDate(), title: 'Statistics & Logic', grade: '11-C', room: 'Lab 2', start: '14:00', end: '15:30' },
+        { id: 'L2', teacherId: 'T001', date: localDate(), title: 'Advanced Calculus', grade: '9-A', room: 'Room 1C', start: '11:00', end: '12:30' },
+        { id: 'L3', teacherId: 'T001', date: localDate(), title: 'Statistics & Logic', grade: '8-B', room: 'Lab 2', start: '14:00', end: '15:30' },
         { id: 'L4', teacherId: 'T001', date: localDate(), title: 'Homeroom Prep', grade: '10-B', room: 'Room 4B', start: '07:30', end: '08:45' },
     ],
 };
