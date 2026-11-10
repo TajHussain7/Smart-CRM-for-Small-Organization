@@ -9,6 +9,13 @@ const getSnapshot = () => students
 export function useStudents() {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 }
+export function generateStudentId() {
+  const nums = students
+    .map(s => parseInt(s.id.replace(/\D/g, ''), 10))
+    .filter(n => !isNaN(n))
+  const nextNum = nums.length > 0 ? Math.max(...nums) + 1 : 101
+  return `S${nextNum}`
+}
 export function addStudent(student) {
   if (students.some(item => item.id.toLowerCase() === student.id.toLowerCase())) return false
   students = [...students, { ...student, tone: 'slate' }]
