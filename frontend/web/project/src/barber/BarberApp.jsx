@@ -7,7 +7,6 @@ import { useState, useEffect } from 'react'
 import { useWorkspace } from '../workspace-store'
 import {
   services,
-  useBarber,
   setClientsFromAPI,
   setServicesFromAPI,
   totals,
@@ -343,18 +342,18 @@ export default function BarberApp({ page }) {
           {page === 'alerts'
             ? 'Barber Alerts'
             : page === 'reports'
-            ? 'Reports'
-            : page === 'appointments'
-            ? 'Book Appointments'
-            : page.startsWith('client/')
-            ? 'Client Profile'
-            : page === 'add-client'
-            ? 'Add Client'
-            : page === 'payments'
-            ? 'Record Service & Payment'
-            : page === 'clients'
-            ? 'Client List'
-            : 'Barber Dashboard'}
+              ? 'Reports'
+              : page === 'appointments'
+                ? 'Book Appointments'
+                : page.startsWith('client/')
+                  ? 'Client Profile'
+                  : page === 'add-client'
+                    ? 'Add Client'
+                    : page === 'payments'
+                      ? 'Record Service & Payment'
+                      : page === 'clients'
+                        ? 'Client List'
+                        : 'Barber Dashboard'}
         </h2>
         <a href="#school-dashboard">Workspace overview →</a>
       </div>
