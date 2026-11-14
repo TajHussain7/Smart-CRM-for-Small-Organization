@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getMembers, getSessions, createSession } from '../api/gym.js'
+import { getMembers, createSession } from '../api/gym.js'
 import { recordTraining } from '../training-store'
 import { queueAlert } from '../alerts-store'
 import banner from './gym-training.jpg'
@@ -14,7 +14,7 @@ const types = ['Strength Training', 'Personal Training', 'Cardio & HIIT', 'Flexi
 
 export default function TrainingSessions() {
   const [members, setMembers] = useState([])
-  const [sessions, setSessions] = useState([])
+
   const [contact, setContact] = useState('')
   const [memberId, setMemberId] = useState('')
   const [trainer, setTrainer] = useState(trainers[0].id)
@@ -25,23 +25,21 @@ export default function TrainingSessions() {
   const [booking, setBooking] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  async function loadData() {
-    try {
-      const [membersRes, sessionsRes] = await Promise.all([
-        getMembers(),
-        getSessions(),
-      ])
-      const mList = Array.isArray(membersRes) ? membersRes : membersRes?.data || []
-      const sList = Array.isArray(sessionsRes) ? sessionsRes : sessionsRes?.data || []
-      setMembers(mList)
-      setSessions(sList)
-    } catch (err) {
-      console.error('Failed to load training data:', err)
-    }
-  }
 
   useEffect(() => {
-    loadData()
+    let mounted = true
+    async function fetchData() {
+      try {
+        const membersRes = await getMembers()
+        if (!mounted) return
+        const mList = Array.isArray(membersRes) ? membersRes : membersRes?.data || []
+        setMembers(mList)
+      } catch (err) {
+        console.error('Failed to load training data:', err)
+      }
+    }
+    fetchData()
+    return () => { mounted = false }
   }, [])
 
   const member = members.find(item => item._id === memberId || item.id === memberId)

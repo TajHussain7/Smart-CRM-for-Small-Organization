@@ -89,7 +89,6 @@ export default function SelectedStudentProfile({ studentId }) {
 
   useEffect(() => {
     let mounted = true
-    setLoading(true)
     getStudentById(studentId)
       .then(res => {
         if (!mounted) return

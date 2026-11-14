@@ -34,8 +34,8 @@ export default function TeacherTimetable({ teacherId }) {
         setTeachersFromAPI(tList)
         setScheduleFromAPI(sList)
 
-        if (!selected && tList.length > 0) {
-          setSelected(teacherId || tList[0]._id || tList[0].id)
+        if (tList.length > 0) {
+          setSelected(curr => curr || teacherId || tList[0]._id || tList[0].id)
         }
       })
       .catch(err => console.error('Failed to load timetable data:', err))
@@ -47,11 +47,6 @@ export default function TeacherTimetable({ teacherId }) {
     }
   }, [teacherId])
 
-  useEffect(() => {
-    if (!selected && teachers.length > 0) {
-      setSelected(teacherId || teachers[0].id || teachers[0]._id)
-    }
-  }, [teachers, teacherId, selected])
 
   const teacher = teachers.find(item => item.id === selected || item._id === selected)
   const currentDayOfWeek = DAY_NAMES[new Date(`${date}T12:00:00`).getDay()]

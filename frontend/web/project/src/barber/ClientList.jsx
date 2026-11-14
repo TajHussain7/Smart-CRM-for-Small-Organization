@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react'
-import { useBarber, setClientsFromAPI, services, clientStyle, visitLabel, filterClients } from './barber-store'
+import { useBarber, setClientsFromAPI, services, clientStyle, filterClients } from './barber-store'
 import { getClients } from '../api/barber.js'
 
 export default function ClientList() {
   const { clients } = useBarber()
   const [query, setQuery] = useState('')
   const [service, setService] = useState('all')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let mounted = true
-    setLoading(true)
     getClients()
       .then(res => {
         if (!mounted) return
@@ -18,7 +17,9 @@ export default function ClientList() {
         setClientsFromAPI(list)
       })
       .catch(err => console.error('Failed to load clients:', err))
-      .finally(() => setLoading(false))
+      .finally(() => {
+        if (mounted) setLoading(false)
+      })
 
     return () => { mounted = false }
   }, [])

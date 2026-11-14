@@ -23,7 +23,7 @@ import {
 import './barber.css'
 
 function Revenue() {
-  const [trend, setTrend] = useState([800, 1200, 950, 1500, 1400, 1800, 1100])
+  const trend = [800, 1200, 950, 1500, 1400, 1800, 1100]
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   return (
     <section className="g-panel">
@@ -302,7 +302,6 @@ function Payment() {
 
 export default function BarberApp({ page }) {
   const workspace = useWorkspace()
-  const { receipts } = useBarber()
   const [dashboard, setDashboard] = useState(null)
 
   useEffect(() => {

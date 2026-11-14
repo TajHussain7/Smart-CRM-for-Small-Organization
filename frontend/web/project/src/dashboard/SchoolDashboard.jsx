@@ -70,7 +70,6 @@ export default function SchoolDashboard() {
   const [expanded, setExpanded] = useState(false)
   const [panel, setPanel] = useState(null)
   const [summary, setSummary] = useState(null)
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let mounted = true
@@ -78,12 +77,9 @@ export default function SchoolDashboard() {
       .then(res => {
         if (!mounted) return
         setSummary(res)
-        setLoading(false)
       })
       .catch(err => {
-        if (!mounted) return
         console.error('Failed to fetch school dashboard summary:', err)
-        setLoading(false)
       })
     return () => { mounted = false }
   }, [])

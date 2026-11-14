@@ -9,29 +9,37 @@ export default function Alerts({ module }) {
   const [status, setStatus] = useState('Pending')
   const [type, setType] = useState('All Types')
   const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  async function loadAlerts() {
-    setLoading(true)
+  async function refreshAlerts() {
     try {
       const res = await getAlerts(module ? { module } : {})
       const list = Array.isArray(res) ? res : res.data || []
       setAlertsFromAPI(list)
     } catch (err) {
-      console.error('Failed to load alerts:', err)
-    } finally {
-      setLoading(false)
+      console.error('Failed to reload alerts:', err)
     }
   }
 
   useEffect(() => {
-    loadAlerts()
+    let mounted = true
+    getAlerts(module ? { module } : {})
+      .then(res => {
+        if (!mounted) return
+        const list = Array.isArray(res) ? res : res.data || []
+        setAlertsFromAPI(list)
+      })
+      .catch(err => console.error('Failed to load alerts:', err))
+      .finally(() => {
+        if (mounted) setLoading(false)
+      })
+    return () => { mounted = false }
   }, [module])
 
   async function handleMarkRead(id) {
     try {
       await apiMarkRead(id)
-      loadAlerts()
+      await refreshAlerts()
     } catch (err) {
       console.error('Failed to mark read:', err)
     }
@@ -40,7 +48,7 @@ export default function Alerts({ module }) {
   async function handleRetry(id) {
     try {
       await apiRetry(id)
-      loadAlerts()
+      await refreshAlerts()
     } catch (err) {
       console.error('Failed to retry alert:', err)
     }

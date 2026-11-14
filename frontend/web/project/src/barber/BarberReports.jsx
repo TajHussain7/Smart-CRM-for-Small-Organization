@@ -3,21 +3,16 @@ import { getBarberReports } from '../api/barber.js'
 
 export default function BarberReports() {
   const [report, setReport] = useState(null)
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let mounted = true
-    setLoading(true)
     getBarberReports()
       .then(res => {
         if (!mounted) return
         setReport(res)
-        setLoading(false)
       })
       .catch(err => {
-        if (!mounted) return
         console.error('Failed to load barber reports:', err)
-        setLoading(false)
       })
     return () => { mounted = false }
   }, [])

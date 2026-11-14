@@ -1,6 +1,4 @@
-import { useWorkspace } from '../workspace-store'
 import { useState, useEffect } from 'react'
-import { getMemberProfile } from './member-profile-data'
 import {
   getGymDashboard,
   getMembers,
@@ -357,8 +355,7 @@ function AddMember({ onAdd }) {
   )
 }
 
-function Profile({ member, notify }) {
-  const details = member.details || getMemberProfile(member._id || member.id, member.name, member.plan)
+function Profile({ member }) {
   const price = member.plan === 'PREMIUM' ? 8000 : member.plan === 'ANNUAL' ? 60000 : 5000
 
   return (
@@ -573,7 +570,20 @@ export default function GymApp({ route }) {
   }
 
   useEffect(() => {
-    loadGymData()
+    let mounted = true
+    async function fetchData() {
+      try {
+        const [membersRes, dashRes] = await Promise.all([getMembers(), getGymDashboard()])
+        if (!mounted) return
+        const mList = Array.isArray(membersRes) ? membersRes : membersRes?.data || []
+        setMembers(mList)
+        setSummary(dashRes)
+      } catch (err) {
+        console.error('Failed to load gym data:', err)
+      }
+    }
+    fetchData()
+    return () => { mounted = false }
   }, [])
 
   const path = route.slice(5).split('/')

@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useStudents } from './students-store'
 import { getInvoices, generateInvoices, recordPayment } from '../api/school.js'
 import './alerts.css'
 
 export default function FeeInvoiceForm() {
-  const students = useStudents()
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(false)
   const [notice, setNotice] = useState('')
@@ -31,7 +29,19 @@ export default function FeeInvoiceForm() {
   }
 
   useEffect(() => {
-    loadInvoices()
+    let mounted = true
+    async function fetchData() {
+      try {
+        const data = await getInvoices()
+        if (!mounted) return
+        const list = Array.isArray(data) ? data : data.data || []
+        setInvoices(list)
+      } catch (err) {
+        console.error('Failed to load invoices:', err)
+      }
+    }
+    fetchData()
+    return () => { mounted = false }
   }, [])
 
   async function handleGenerate(e) {

@@ -11,7 +11,6 @@ export default function ClientProfile({ clientId }) {
 
   useEffect(() => {
     let mounted = true
-    setLoading(true)
     getClientById(clientId)
       .then(res => {
         if (!mounted) return
