@@ -1,12 +1,7 @@
 import { useSyncExternalStore } from 'react';
 let sequence = 0;
 let invoices = [];
-let entries = [
-    { id: 'sample-fee', eventId: 'sample-fee', module: 'school', type: 'Fee Reminder', recipient: 'Parent of Sarah Jenkins', contact: 'Sample recipient', message: 'Tuition fees for Sarah Jenkins (Grade 4) are due tomorrow.', channel: 'SMS', status: 'Sent', createdAt: '2026-10-28T09:00:00', sample: true },
-    { id: 'sample-membership', eventId: 'sample-membership', module: 'gym', type: 'Membership Reminder', recipient: 'John Doe', contact: 'Sample recipient', message: 'Annual gym membership expires in 5 days. Please renew your plan.', channel: 'Email', status: 'Pending', createdAt: '2026-10-28T08:00:00', sample: true },
-    { id: 'sample-appointment', eventId: 'sample-appointment', module: 'barber', type: 'Appointment Reminder', recipient: 'Marcus', contact: 'Sample recipient', message: 'Haircut appointment at 4:30 PM with your selected barber.', channel: 'WhatsApp', status: 'Sent', createdAt: '2026-10-28T07:00:00', sample: true },
-    { id: 'sample-failed', eventId: 'sample-failed', module: 'school', type: 'Fee Reminder', recipient: 'Parent of Alex River', contact: 'Sample recipient', message: 'Fee reminder could not be delivered. Check the recipient contact before retrying.', channel: 'SMS', status: 'Failed', createdAt: '2026-10-27T09:00:00', sample: true },
-];
+let entries = [];
 const listeners = new Set();
 const publish = () => listeners.forEach(l => l());
 const subscribe = (l) => { listeners.add(l); return () => { listeners.delete(l); }; };
@@ -14,6 +9,41 @@ export const getInvoices = () => invoices;
 export const useFeeInvoices = () => useSyncExternalStore(subscribe, getInvoices, getInvoices);
 export const getAlerts = () => entries;
 export const useAlerts = () => useSyncExternalStore(subscribe, getAlerts, getAlerts);
+
+export function setAlertsFromAPI(list = []) {
+    entries = list.map(item => ({
+        id: item._id || item.id,
+        _id: item._id,
+        eventId: item.eventId,
+        module: item.module,
+        type: item.type,
+        recipient: item.recipient,
+        contact: item.contact,
+        message: item.message,
+        channel: item.channel,
+        status: item.status,
+        read: !!item.read,
+        retryCount: item.retryCount || 0,
+        createdAt: item.createdAt,
+    }));
+    publish();
+}
+
+export function setInvoicesFromAPI(list = []) {
+    invoices = list.map(item => ({
+        id: item.invoiceNumber || item._id || item.id,
+        _id: item._id,
+        studentId: item.studentId?.studentId || item.studentId || '',
+        student: item.studentId?.name || '',
+        parent: item.studentId?.guardianName || '',
+        contact: item.studentId?.guardianPhone || '',
+        amount: item.amountDue,
+        amountPaid: item.amountPaid || 0,
+        due: item.dueDate ? item.dueDate.split('T')[0] : '',
+        status: item.status,
+    }));
+    publish();
+}
 export function queueAlert(input) {
     if (entries.some(e => e.eventId === input.eventId && e.module === input.module))
         return;

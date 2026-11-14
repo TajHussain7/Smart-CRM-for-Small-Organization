@@ -20,7 +20,7 @@ const classScheduleSchema = new Schema<IClassSchedule>(
     classLevel: { type: String, enum: Object.values(ClassLevel), required: true },
     section: { type: String, enum: Object.values(Section), required: true },
     subject: { type: String, required: true, trim: true },
-    teacherId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    teacherId: { type: Schema.Types.ObjectId, ref: "Teacher", required: true },
     dayOfWeek: { type: String, enum: Object.values(DayOfWeek), required: true },
     startTime: { type: String, required: true },
     endTime: { type: String, required: true },

@@ -1,7 +1,1 @@
-[
-  {"id":"S102","name":"Alex Johnson","grade":"10th","section":"Section A (Boys)","gender":"Male","status":"Paid","tone":"slate"},
-  {"id":"S105","name":"Sarah Williams","grade":"Nursery","section":"Section B (Girls)","gender":"Female","status":"Pending","tone":"blue"},
-  {"id":"S112","name":"Marcus Chen","grade":"9th","section":"Section A (Boys)","gender":"Male","status":"Paid","tone":"cyan"},
-  {"id":"S098","name":"Elena Rodriguez","grade":"Play Group","section":"Section B (Girls)","gender":"Female","status":"Paid","tone":"slate"},
-  {"id":"S115","name":"Jordan Smith","grade":"8th","section":"Section A (Boys)","gender":"Male","status":"Pending","tone":"blue"}
-]
+[]

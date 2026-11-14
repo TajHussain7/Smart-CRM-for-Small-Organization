@@ -1,27 +1,61 @@
 import { useSyncExternalStore } from 'react';
-export const services = [
-    { id: 'haircut', name: 'Classic Haircut', minutes: 45, cents: 3500, bookings: 42 },
-    { id: 'beard', name: 'Beard Sculpting', minutes: 30, cents: 3000, bookings: 31 },
-    { id: 'shave', name: 'Hot Towel Shave', minutes: 30, cents: 2500, bookings: 18 },
-    { id: 'fade', name: 'Fade & Beard Trim', minutes: 60, cents: 4500, bookings: 24 },
+export let services = [
+    { id: 'haircut', name: 'Classic Haircut', minutes: 45, cents: 100000, bookings: 42 },
+    { id: 'beard', name: 'Beard Sculpting', minutes: 30, cents: 60000, bookings: 31 },
+    { id: 'shave', name: 'Hot Towel Shave', minutes: 30, cents: 50000, bookings: 18 },
+    { id: 'fade', name: 'Fade & Beard Trim', minutes: 60, cents: 150000, bookings: 24 },
 ];
 let state = {
-    clients: [
-        { id: 'james', name: 'James Dalton', phone: '+1 (555) 123-4567', email: 'james@example.com', service: 'haircut', loyalty: true, notes: 'Short sides, natural finish.', points: 450 },
-        { id: 'alex', name: 'Alex Morgan', phone: '+1 (555) 234-5678', email: 'alex@example.com', service: 'fade', loyalty: true, notes: '', points: 650 },
-        { id: 'sample-0', name: 'Marcus Thorne', since: '2022-10-14', preferences: ['Morning Appts', 'Coffee: Black', 'Silent Service', 'E-Receipts'], history: [{ id: 'm1', name: 'Advanced Color & Trim', date: '2024-03-12', stylist: 'Marcus K.', cents: 14500 }, { id: 'm2', name: 'Hydrating Scalp Treatment', date: '2024-02-05', stylist: 'Marcus K.', cents: 6500 }, { id: 'm3', name: 'Deep Condition & Style', date: '2024-01-18', stylist: 'Sarah J.', cents: 8500 }], phone: '+1 (555) 700-0000', email: 'client0@example.com', service: 'fade', loyalty: true, notes: 'Client prefers non-scented products due to allergies. Always uses Matrix color line 7N.', points: 2450, style: 'High Fade & Lineup', lastVisit: '2024-03-12' },
-        { id: 'sample-1', name: 'Liam Vance', phone: '+1 (555) 700-0001', email: 'client1@example.com', service: 'beard', loyalty: true, notes: '', points: 100, style: 'Classic Taper & Beard Grooming', lastVisit: '2023-11-02' },
-        { id: 'sample-2', name: 'Julian Reed', phone: '+1 (555) 700-0002', email: 'client2@example.com', service: 'haircut', loyalty: true, notes: '', points: 100, style: 'Skin Fade & Scissor Top', lastVisit: '2023-10-30' },
-        { id: 'sample-3', name: 'Silas Knight', phone: '+1 (555) 700-0003', email: 'client3@example.com', service: 'shave', loyalty: true, notes: '', points: 100, style: 'Buzz Cut & Clean Shave', lastVisit: '2023-09-15' },
-        { id: 'sample-4', name: 'Ethan Brooks', phone: '+1 (555) 700-0004', email: 'client4@example.com', service: 'haircut', loyalty: true, notes: '', points: 100, style: 'Pompadour & Taper', lastVisit: '2023-10-28' },
-    ], receipts: [],
+    clients: [],
+    receipts: [],
 };
 const listeners = new Set();
 const subscribe = (listener) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
 export const getBarber = () => state;
 export const useBarber = () => useSyncExternalStore(subscribe, getBarber, getBarber);
 const publish = () => listeners.forEach(listener => listener());
-export const money = (cents) => `$${(cents / 100).toFixed(2)}`;
+export const money = (cents) => `Rs. ${(cents / 100).toLocaleString()}`;
+
+export function setClientsFromAPI(clients = []) {
+    state = {
+        ...state,
+        clients: clients.map(c => ({
+            id: c._id || c.id,
+            _id: c._id,
+            name: c.name,
+            phone: c.phone,
+            email: c.email || '',
+            loyalty: true,
+            points: c.loyaltyPoints || 0,
+            notes: c.notes || '',
+            preferences: c.preferences || [],
+            history: (c.visitHistory || []).map(v => ({
+                id: v._id || `${Date.now()}`,
+                name: 'Service',
+                date: v.date ? v.date.split('T')[0] : '',
+                stylist: 'Barber Staff',
+                cents: v.amountInPaisas || 100000,
+            })),
+            since: c.createdAt ? c.createdAt.split('T')[0] : '',
+            lastVisit: c.lastVisit ? c.lastVisit.split('T')[0] : '',
+        })),
+    };
+    publish();
+}
+
+export function setServicesFromAPI(apiServices = []) {
+    if (apiServices && apiServices.length > 0) {
+        services = apiServices.map(s => ({
+            id: s._id || s.id,
+            _id: s._id,
+            name: s.name,
+            minutes: s.durationMinutes || 30,
+            cents: s.priceInPaisas || (s.price ? s.price * 100 : 50000),
+            bookings: s.bookings || 0,
+        }));
+        publish();
+    }
+}
 export function addClient(input) {
     if (!input.name.trim() || input.phone.replace(/\D/g, '').length < 7 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email.trim()) || !services.some(s => s.id === input.service))
         return 'Enter a name, valid phone, email and primary service.';

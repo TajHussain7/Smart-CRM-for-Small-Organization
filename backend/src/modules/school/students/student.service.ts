@@ -132,8 +132,13 @@ export const updateStudent = async (
     updates.guardianEmail = updates.guardianEmail.toLowerCase();
   }
 
+  const isObjectId = mongoose.Types.ObjectId.isValid(id);
+  const query = isObjectId
+    ? { workspaceId, $or: [{ _id: id }, { studentId: id }] }
+    : { workspaceId, studentId: id };
+
   const student = await Student.findOneAndUpdate(
-    { _id: id, workspaceId },
+    query,
     updates,
     { new: true, runValidators: true }
   ).populate("assignedTeacherId", "name email subject");
@@ -145,7 +150,12 @@ export const updateStudent = async (
 };
 
 export const deleteStudent = async (workspaceId: string, id: string) => {
-  const student = await Student.findOneAndDelete({ _id: id, workspaceId });
+  const isObjectId = mongoose.Types.ObjectId.isValid(id);
+  const query = isObjectId
+    ? { workspaceId, $or: [{ _id: id }, { studentId: id }] }
+    : { workspaceId, studentId: id };
+
+  const student = await Student.findOneAndDelete(query);
   if (!student) {
     throw new NotFoundError("Student not found");
   }
