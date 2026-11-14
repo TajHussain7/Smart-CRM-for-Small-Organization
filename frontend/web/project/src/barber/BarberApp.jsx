@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { useWorkspace } from '../workspace-store'
 import {
   services,
+  useBarber,
   setClientsFromAPI,
   setServicesFromAPI,
   totals,
