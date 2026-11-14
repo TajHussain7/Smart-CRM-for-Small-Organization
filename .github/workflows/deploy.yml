@@ -20,11 +20,23 @@ jobs:
     steps:
       - name: Deploy Staging Backend (develop)
         if: github.ref == 'refs/heads/develop'
+        env:
+          HOOK_URL: ${{ secrets.RENDER_DEV_DEPLOY_HOOK }}
         run: |
-          curl -f -X POST "${{ secrets.RENDER_DEV_DEPLOY_HOOK }}"
+          if [ -z "$HOOK_URL" ]; then
+            echo "::warning::RENDER_DEV_DEPLOY_HOOK secret is not set in repository settings. Skipping Render deploy."
+          else
+            curl -f -X POST "$HOOK_URL"
+          fi
 
       - name: Deploy Production Backend (main)
         if: github.ref == 'refs/heads/main'
+        env:
+          HOOK_URL: ${{ secrets.RENDER_PROD_DEPLOY_HOOK }}
         run: |
-          curl -f -X POST "${{ secrets.RENDER_PROD_DEPLOY_HOOK }}"
+          if [ -z "$HOOK_URL" ]; then
+            echo "::warning::RENDER_PROD_DEPLOY_HOOK secret is not set in repository settings. Skipping Render deploy."
+          else
+            curl -f -X POST "$HOOK_URL"
+          fi
 

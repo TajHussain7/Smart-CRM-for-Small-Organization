@@ -16,16 +16,13 @@ function Dialog({ title, close, children }) {
 }
 
 const grades = ['Play Group', 'Nursery', 'KG I', 'KG II', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th']
-const sections = ['Section A (Boys)', 'Section B (Girls)']
 
 export default function Students() {
   const students = useStudents()
   const [query, setQuery] = useState('')
   const [grade, setGrade] = useState('All')
-  const [section, setSection] = useState('All')
   const [status, setStatus] = useState('All')
   const [draftGrade, setDraftGrade] = useState('All')
-  const [draftSection, setDraftSection] = useState('All')
   const [draftStatus, setDraftStatus] = useState('All')
   const [panel, setPanel] = useState(null)
   const [error, setError] = useState('')
@@ -93,13 +90,13 @@ export default function Students() {
   return <div className="school-shell students-shell">
     <header className="school-header"><div className="school-header-inner"><a className="school-icon-button student-back" href="#school-dashboard" aria-label="Back to dashboard"><Icon name="back" /></a><h1>School Management</h1><button className="school-avatar" aria-label="Open administrator profile" onClick={() => {location.hash='#school-settings'}}>SA</button></div></header>
     <main className="students-main">
-      <div className="student-tools"><div className="student-search"><Icon name="search" size={21} /><input type="search" aria-label="Search students by name or ID" placeholder="Search students by name or ID..." value={query} onChange={event => setQuery(event.target.value)} /></div><button className="student-filter" onClick={() => { setDraftGrade(grade); setDraftSection(section); setDraftStatus(status); setPanel('Filter Students') }}><Icon name="filter" size={20} />Filter{filterCount ? ' (' + filterCount + ')' : ''}</button></div>
+      <div className="student-tools"><div className="student-search"><Icon name="search" size={21} /><input type="search" aria-label="Search students by name or ID" placeholder="Search students by name or ID..." value={query} onChange={event => setQuery(event.target.value)} /></div><button className="student-filter" onClick={() => { setDraftGrade(grade); setDraftStatus(status); setPanel('Filter Students') }}><Icon name="filter" size={20} />Filter{filterCount ? ' (' + filterCount + ')' : ''}</button></div>
       <section className="student-overview" aria-label="Student summary">
         <article className="student-enrollment"><h2>TOTAL ENROLLMENT</h2><strong>{students.length.toLocaleString()}</strong><p><Icon name="trend" size={16} />Active enrolled</p></article>
         <article className="student-metric"><h2>FEES PAID</h2><strong>{feePaidPercentage}%</strong></article><article className="student-metric attendance"><h2>ATTENDANCE</h2><strong>95%</strong></article>
       </section>
       {notice && <p className="student-notice" role="status">{notice}</p>}
-      {(query || filterCount > 0) && <div className="student-results" role="status"><span>{filtered.length} student{filtered.length === 1 ? '' : 's'} found</span><button onClick={() => { setQuery(''); setGrade('All'); setSection('All'); setStatus('All') }}>Clear filters</button></div>}
+      {(query || filterCount > 0) && <div className="student-results" role="status"><span>{filtered.length} student{filtered.length === 1 ? '' : 's'} found</span><button onClick={() => { setQuery(''); setGrade('All'); setStatus('All') }}>Clear filters</button></div>}
       <section className="student-list" aria-label="Students">
         <div className="g-panel student-table-panel"><div className="g-table-wrap"><table><thead><tr><th>Student</th><th>Student ID</th><th>Grade</th><th>Fee status</th><th>Action</th></tr></thead><tbody>{filtered.map(student => <tr key={student.id}><td><a className="g-person" href={`#student/${student.id}`} aria-label={`View profile for ${student.name}, ${student.id}`}><span className={'student-avatar ' + (student.tone || 'slate')}><Icon name="profile" size={21}/></span><strong>{student.name}</strong></a></td><td>{student.id}</td><td>{student.grade}</td><td><span className={`g-badge ${student.status === 'Paid' ? 'good' : 'warn'}`}>{student.status}</span></td><td><a href={`#student/${student.id}`}>View profile →</a></td></tr>)}</tbody></table></div></div>
         {filtered.length === 0 && <div className="student-empty"><Icon name="search" size={30} /><h2>No students found</h2><p>{students.length === 0 ? 'No students enrolled yet. Add your first student.' : 'Try another name, ID, or filter.'}</p></div>}
