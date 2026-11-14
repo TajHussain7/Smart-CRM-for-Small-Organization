@@ -1,7 +1,130 @@
-import { report, reportCsv, reportHtml } from './barber-bookings-store'
-import { money } from './barber-store'
+import { useState, useEffect } from 'react'
+import { getBarberReports } from '../api/barber.js'
+
 export default function BarberReports() {
-  function csv() { const url=URL.createObjectURL(new Blob([reportCsv()],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='barber-sample-report.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000) }
-  function pdf() { const frame=document.createElement('iframe');frame.style.cssText='position:fixed;width:0;height:0;border:0';frame.srcdoc=reportHtml();frame.onload=()=>{frame.contentWindow.focus();frame.contentWindow.print();setTimeout(()=>frame.remove(),60000)};document.body.appendChild(frame) }
-  return <div><div className="g-metrics">{[["Today's Revenue",money(report.revenue),'+12%'],['Appointments','12','Busy Day'],['Avg Ticket Value',money(Math.round(report.revenue/report.appointments)),'Target: $65']].map(([label,value,note])=><section key={label}><div><span className="g-eyebrow">{label}</span><strong>{value}</strong><small>{note}</small></div></section>)}</div><p className="g-muted">Sample report · Last 7 days · Not live accounts</p><div className="b-form"><section className="g-panel"><div className="g-panel-head"><h2>Revenue Trends</h2><span>Last 7 Days</span></div><div className="br-bars" role="img" aria-label={report.days.map((d,i)=>`${d}: $${report.trend[i]}`).join(', ')}>{report.trend.map((v,i)=><div key={i}><span style={{height:`${v/6}px`,background:i===3?'#0052d5':`rgba(30,98,210,${.25+i*.1})`}}/><small>{report.days[i]}</small></div>)}</div></section><section className="g-panel"><h2>Service Popularity</h2>{report.popularity.map(item=><div className="g-growth" key={item.name}><div><span>{item.name}</span><strong>{item.count}</strong></div><div className="g-track"><span style={{width:`${item.count/50*100}%`}}/></div></div>)}</section></div><section className="g-panel"><h2>Barber Performance</h2>{report.staff.map(staff=><div className="b-service" key={staff.name}><span className="bc-avatar">{staff.name.split(' ').map(n=>n[0]).join('')}</span><span><strong>{staff.name}</strong><small>{staff.bookings} Bookings</small></span><strong className="bp-price">{money(staff.cents)}</strong></div>)}</section><div className="br-export"><button className="g-button" onClick={csv}>↓ Export CSV Report</button><button className="g-button secondary" onClick={pdf}>Print / Save PDF</button></div><p className="g-muted">Scheduled report delivery will be available after backend integration.</p></div>
+  const [report, setReport] = useState(null)
+
+  useEffect(() => {
+    let mounted = true
+    getBarberReports()
+      .then(res => {
+        if (!mounted) return
+        setReport(res)
+      })
+      .catch(err => {
+        console.error('Failed to load barber reports:', err)
+      })
+    return () => { mounted = false }
+  }, [])
+
+  const todayRevenue = report?.todayRevenue || 0
+  const todayTransactions = report?.todayTransactions || 0
+  const avgTicket = todayTransactions ? Math.round(todayRevenue / todayTransactions) : 0
+  const trend = report?.sevenDayRevenueTrend || []
+  const topServices = report?.topServices || []
+  const totalClients = report?.totalClients || 0
+  const loyaltyCount = report?.loyaltyMembersCount || 0
+
+  const maxRevenue = Math.max(...trend.map(t => t.revenue), 1000)
+
+  function exportCsv() {
+    const csvContent = 'data:text/csv;charset=utf-8,' +
+      'Metric,Value\n' +
+      `Today Revenue,Rs. ${todayRevenue}\n` +
+      `Today Appointments,${todayTransactions}\n` +
+      `Total Clients,${totalClients}\n` +
+      `Loyalty Clients,${loyaltyCount}\n\n` +
+      'Date,Daily Revenue (PKR),Transactions\n' +
+      trend.map(t => `${t.date},${t.revenue},${t.transactions}`).join('\n')
+
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute('download', `barber_report_${new Date().toISOString().split('T')[0]}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  return (
+    <div>
+      <div className="g-metrics">
+        {[
+          ["Today's Revenue", `Rs. ${todayRevenue.toLocaleString()}`, `${todayTransactions} transactions`],
+          ['Appointments Today', todayTransactions.toString(), 'Daily bookings'],
+          ['Avg Ticket Value', `Rs. ${avgTicket.toLocaleString()}`, 'Per transaction'],
+          ['Total Clients', totalClients.toString(), `${loyaltyCount} Loyalty members`],
+        ].map(([label, value, note]) => (
+          <section key={label}>
+            <div>
+              <span className="g-eyebrow">{label}</span>
+              <strong>{value}</strong>
+              <small>{note}</small>
+            </div>
+          </section>
+        ))}
+      </div>
+
+      <div className="b-form">
+        <section className="g-panel">
+          <div className="g-panel-head">
+            <h2>Revenue Trend</h2>
+            <span>Last 7 Days (PKR)</span>
+          </div>
+          {trend.length > 0 ? (
+            <div className="br-bars" role="img" aria-label="7 day revenue trend">
+              {trend.map((item, i) => (
+                <div key={item.date || i}>
+                  <span
+                    style={{
+                      height: `${Math.max(10, Math.min(120, (item.revenue / maxRevenue) * 120))}px`,
+                      background: '#064bcb',
+                    }}
+                    title={`${item.date}: Rs. ${item.revenue}`}
+                  />
+                  <small>{item.date.slice(5)}</small>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="g-empty" style={{ padding: '24px 0' }}>
+              No payments recorded in the last 7 days.
+            </p>
+          )}
+        </section>
+
+        <section className="g-panel">
+          <h2>Popular Services</h2>
+          {topServices.length > 0 ? (
+            topServices.map(item => (
+              <div className="g-growth" key={item.name}>
+                <div>
+                  <span>{item.name} (Rs. {((item.priceInPaisas || 0) / 100).toLocaleString()})</span>
+                  <strong>{item.bookingsCount || 0} Bookings</strong>
+                </div>
+                <div className="g-track">
+                  <span
+                    style={{
+                      width: `${Math.min(100, (item.bookingsCount || 1) * 10)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="g-empty">No service booking data yet.</p>
+          )}
+        </section>
+      </div>
+
+      <div className="br-export" style={{ marginTop: 24 }}>
+        <button className="g-button" onClick={exportCsv}>
+          ↓ Export CSV Report
+        </button>
+        <button className="g-button secondary" onClick={() => window.print()}>
+          Print / Save PDF
+        </button>
+      </div>
+    </div>
+  )
 }

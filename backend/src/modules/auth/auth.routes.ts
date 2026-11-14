@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, refresh, getMe } from "./auth.controller";
+import { register, login, refresh, getMe, loginDemo } from "./auth.controller";
 import { validate } from "../../common/middleware/validate.middleware";
 import { registerSchema, loginSchema } from "./auth.validation";
 import { authRateLimiter } from "../../common/middleware/rateLimit.middleware";
@@ -10,6 +10,7 @@ const router = Router();
 
 router.post("/register", authRateLimiter, validate(registerSchema), register);
 router.post("/login", authRateLimiter, validate(loginSchema), login);
+router.post("/demo", authRateLimiter, loginDemo);
 router.post("/refresh", refresh);
 router.get("/me", authenticate, attachTenant, getMe);
 

@@ -42,6 +42,18 @@ export async function login(credentials) {
   return { user: data.user, workspace };
 }
 
+// ─── Demo Workspace Login ─────────────────────────────────────────────────────
+export async function loginDemo() {
+  const data = await request('/auth/demo', {
+    method: 'POST',
+  });
+
+  setTokens(data.accessToken, data.refreshToken);
+  persistSession(data.user, data.workspace);
+
+  return { user: data.user, workspace: data.workspace };
+}
+
 // ─── Logout ──────────────────────────────────────────────────────────────────
 export function logout() {
   clearTokens();

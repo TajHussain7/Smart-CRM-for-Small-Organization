@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { registerUser, loginUser, refreshAccessToken } from "./auth.service";
+import { registerUser, loginUser, refreshAccessToken, loginDemoUser } from "./auth.service";
 import { sendSuccess } from "../../common/utils/apiResponse";
 import { BadRequestError } from "../../common/errors";
 
@@ -37,6 +37,27 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         schoolEnabled: workspace.schoolEnabled,
         gymEnabled: workspace.gymEnabled,
         barberEnabled: workspace.barberEnabled,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const loginDemo = async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { user, workspace, accessToken, refreshToken } = await loginDemoUser();
+    return sendSuccess(res, 200, "Demo login successful", {
+      accessToken,
+      refreshToken,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, isDemo: true },
+      workspace: {
+        id: workspace._id,
+        name: workspace.name,
+        schoolEnabled: workspace.schoolEnabled,
+        gymEnabled: workspace.gymEnabled,
+        barberEnabled: workspace.barberEnabled,
+        isDemo: true,
       },
     });
   } catch (error) {

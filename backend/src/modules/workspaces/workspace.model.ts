@@ -4,6 +4,7 @@ export interface IWorkspace extends Document {
   name: string;
   ownerName: string;
   ownerEmail: string;
+  isDemo: boolean;
   schoolEnabled: boolean;
   gymEnabled: boolean;
   barberEnabled: boolean;
@@ -19,6 +20,7 @@ const workspaceSchema = new Schema<IWorkspace>(
     name: { type: String, required: true, trim: true },
     ownerName: { type: String, default: "", trim: true },
     ownerEmail: { type: String, default: "", trim: true, lowercase: true },
+    isDemo: { type: Boolean, default: false },
     schoolEnabled: { type: Boolean, default: true },
     gymEnabled: { type: Boolean, default: true },
     barberEnabled: { type: Boolean, default: true },
