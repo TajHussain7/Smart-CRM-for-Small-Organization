@@ -1,5 +1,5 @@
 import { ClassSchedule } from "./classSchedule.model";
-import { User } from "../../users/user.model";
+import { Teacher } from "../teachers/teacher.model";
 import { DayOfWeek } from "../../../common/constants/dayOfWeek";
 import { ClassLevel } from "../../../common/constants/classLevel";
 import { Section } from "../../../common/constants/section";
@@ -21,7 +21,7 @@ const timeRangesOverlap = (startA: string, endA: string, startB: string, endB: s
 };
 
 export const createSchedule = async (input: CreateScheduleInput) => {
-  const teacher = await User.findOne({ _id: input.teacherId, workspaceId: input.workspaceId });
+  const teacher = await Teacher.findOne({ _id: input.teacherId, workspaceId: input.workspaceId });
   if (!teacher) {
     throw new NotFoundError("Teacher not found");
   }

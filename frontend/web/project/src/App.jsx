@@ -3,7 +3,7 @@ import './App.css'
 import SchoolWorkspace from './dashboard/SchoolWorkspace'
 import { saveWorkspace } from './workspace-store'
 import { saveAccount } from './account-store'
-import { login, register, logout } from './api/auth.js'
+import { login, register, logout, loginDemo } from './api/auth.js'
 import {
   useAuth,
   setAuthSession,
@@ -153,6 +153,24 @@ export default function App() {
     } catch (err) {
       setAuthLoading(false)
       setAuthError(err.message || 'Something went wrong. Please try again.')
+    }
+  }
+
+  // ─── Demo Workspace Handler ───────────────────────────────────────────────
+  async function handleDemoLogin() {
+    setNotice('')
+    setAuthError(null)
+    setAuthLoading(true)
+
+    try {
+      const { user, workspace } = await loginDemo()
+      saveAccount({ name: user.name, email: user.email, phone: '', address: '', bio: '', photo: '' })
+      saveWorkspace(workspace?.name || 'Demo Workspace')
+      setAuthSession(user, workspace)
+      location.hash = '#school-dashboard'
+    } catch (err) {
+      setAuthLoading(false)
+      setAuthError(err.message || 'Unable to access Demo Workspace. Please ensure demo data is loaded.')
     }
   }
 
@@ -320,9 +338,17 @@ export default function App() {
             </>
           )}
 
-          <p className="footer">
-            <a href="#school-dashboard">Preview School Dashboard</a>
-          </p>
+          <div className="auth-demo-action">
+            <button
+              type="button"
+              className="demo-btn"
+              disabled={isLoading}
+              onClick={handleDemoLogin}
+            >
+              <Icon name="rocket" size={18} />
+              <span>Explore Demo Workspace</span>
+            </button>
+          </div>
         </section>
 
         <footer className="auth-page-footer">Smart CRM · School Management Workspace</footer>

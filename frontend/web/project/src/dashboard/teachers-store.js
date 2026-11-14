@@ -6,19 +6,51 @@ export function lessonStatus(lesson, now = new Date()) { const start = new Date(
 export function weekDates(value) { const date = new Date(`${value}T12:00:00`); date.setDate(date.getDate() - (date.getDay() + 6) % 7); return Array.from({ length: 7 }, (_, i) => { const day = new Date(date); day.setDate(day.getDate() + i); return localDate(day); }); }
 export function timeLabel(value) { const [h, m] = value.split(':').map(Number); return `${String(h % 12 || 12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; }
 let state = {
-    teachers: [{ id: 'T001', name: 'Daniel Carter', email: 'daniel.carter@example.com', subject: 'Mathematics' }],
-    lessons: [
-        { id: 'L1', teacherId: 'T001', date: localDate(), title: 'Mathematics 101', grade: '10-B', room: 'Room 4B', start: '09:00', end: '10:30' },
-        { id: 'L2', teacherId: 'T001', date: localDate(), title: 'Advanced Calculus', grade: '12-A', room: 'Room 1C', start: '11:00', end: '12:30' },
-        { id: 'L3', teacherId: 'T001', date: localDate(), title: 'Statistics & Logic', grade: '11-C', room: 'Lab 2', start: '14:00', end: '15:30' },
-        { id: 'L4', teacherId: 'T001', date: localDate(), title: 'Homeroom Prep', grade: '10-B', room: 'Room 4B', start: '07:30', end: '08:45' },
-    ],
+    teachers: [],
+    lessons: [],
 };
 let sequence = 1;
 const listeners = new Set();
 const subscribe = (listener) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
 export const getTeacherSnapshot = () => state;
 export function useTeachers() { return useSyncExternalStore(subscribe, getTeacherSnapshot, getTeacherSnapshot); }
+
+export function setTeachersFromAPI(teachers = []) {
+    state = {
+        ...state,
+        teachers: teachers.map(t => ({
+            id: t._id || t.id,
+            _id: t._id,
+            name: t.name,
+            email: t.email,
+            subject: t.subject,
+            phone: t.phone || '',
+        })),
+    };
+    listeners.forEach(listener => listener());
+}
+
+export function setScheduleFromAPI(schedule = []) {
+    state = {
+        ...state,
+        lessons: schedule.map(item => ({
+            id: item._id || item.id,
+            _id: item._id,
+            teacherId: item.teacherId?._id || item.teacherId || '',
+            teacherName: item.teacherId?.name || '',
+            date: localDate(),
+            title: item.subject,
+            grade: `${item.classLevel}-${item.section}`,
+            classLevel: item.classLevel,
+            section: item.section,
+            room: 'Room 1',
+            start: item.startTime,
+            end: item.endTime,
+            dayOfWeek: item.dayOfWeek,
+        })),
+    };
+    listeners.forEach(listener => listener());
+}
 export function addTeacher(input) {
     const name = input.name.trim(), email = input.email.trim().toLowerCase(), subject = input.subject.trim();
     if (!name || !subject || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))

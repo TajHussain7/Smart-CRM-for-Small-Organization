@@ -91,9 +91,44 @@ export const refreshAccessToken = (refreshToken: string) => {
       userId: decoded.userId,
       workspaceId: decoded.workspaceId,
       role: decoded.role,
+      isDemo: decoded.isDemo,
     });
     return newAccessToken;
   } catch {
     throw new UnauthorizedError("Invalid or expired refresh token");
   }
+};
+
+export const loginDemoUser = async () => {
+  // Find the designated demo workspace (by isDemo: true or fallback to name DEMO_WORKSPACE)
+  let workspace = await Workspace.findOne({ isDemo: true });
+  if (!workspace) {
+    workspace = await Workspace.findOne({ name: /demo/i });
+  }
+
+  if (!workspace) {
+    throw new UnauthorizedError("Demo Workspace is not initialized yet. Please seed demo data in MongoDB Atlas.");
+  }
+
+  // Find demo admin user or any user in that workspace
+  let user = await User.findOne({ workspaceId: workspace._id, role: UserRole.ADMIN });
+  if (!user) {
+    user = await User.findOne({ workspaceId: workspace._id });
+  }
+
+  if (!user) {
+    throw new UnauthorizedError("Demo Workspace administrator account not found.");
+  }
+
+  const payload = {
+    userId: user._id.toString(),
+    workspaceId: workspace._id.toString(),
+    role: user.role,
+    isDemo: true,
+  };
+
+  const accessToken = signAccessToken(payload);
+  const refreshToken = signRefreshToken(payload);
+
+  return { user, workspace, accessToken, refreshToken };
 };

@@ -1,21 +1,32 @@
 import { queueAlert } from '../alerts-store';
 import { useSyncExternalStore } from 'react';
 import { getBarber, services } from './barber-store';
-export const barbers = ['Marcus Thorne', 'Liam Vance'];
+export const barbers = ['Hamza Malik', 'Bilal Ahmed'];
 export function dateKey(date = new Date()) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
 export const timeSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 export function timeLabel(time) { const hour = Number(time.split(':')[0]); return `${String(hour % 12 || 12).padStart(2, '0')}:${time.split(':')[1]} ${hour >= 12 ? 'PM' : 'AM'}`; }
 export function monthDays(month) { const first = new Date(month.getFullYear(), month.getMonth(), 1); return Array.from({ length: 42 }, (_, i) => new Date(first.getFullYear(), first.getMonth(), 1 - first.getDay() + i)); }
-let bookings = [
-    { id: 'b1', clientId: 'sample-0', serviceId: 'fade', date: dateKey(), time: '09:00', status: 'Confirmed' },
-    { id: 'b2', clientId: 'sample-1', serviceId: 'haircut', date: dateKey(), time: '11:00', status: 'Pending' },
-    { id: 'b3', clientId: 'james', serviceId: 'shave', date: dateKey(), time: '12:00', status: 'In Progress' },
-    { id: 'b4', clientId: 'alex', serviceId: 'beard', date: dateKey(), time: '14:00', status: 'Cancelled' },
-];
+let bookings = [];
 const listeners = new Set();
 const subscribe = (listener) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
 export const getBookings = () => bookings;
 export const useBookings = () => useSyncExternalStore(subscribe, getBookings, getBookings);
+
+export function setBookingsFromAPI(list = []) {
+    bookings = list.map(b => ({
+        id: b._id || b.id,
+        _id: b._id,
+        clientId: b.clientId?._id || b.clientId || '',
+        clientName: b.clientId?.name || '',
+        serviceId: b.serviceId?._id || b.serviceId || '',
+        serviceName: b.serviceId?.name || '',
+        date: b.date,
+        time: b.time || '10:00',
+        barber: b.barberId?.name || barbers[0],
+        status: b.status === 'CONFIRMED' ? 'Confirmed' : b.status === 'CANCELLED' ? 'Cancelled' : b.status === 'COMPLETED' ? 'Completed' : b.status || 'Confirmed',
+    }));
+    listeners.forEach(l => l());
+}
 const minutes = (time) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3));
 export function slotAvailable(date, time, serviceId, now = new Date()) {
     const duration = services.find(s => s.id === serviceId)?.minutes;

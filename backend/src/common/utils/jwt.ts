@@ -5,6 +5,7 @@ export interface JwtPayload {
   userId: string;
   workspaceId: string;
   role: string;
+  isDemo?: boolean;
 }
 
 export const signAccessToken = (payload: JwtPayload): string => {

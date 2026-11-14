@@ -31,7 +31,7 @@ const notificationSchema = new Schema<INotification>(
       enum: ["school", "gym", "barber"],
       required: true,
     },
-    eventId: { type: String, required: true, unique: true },
+    eventId: { type: String, required: true },
     type: {
       type: String,
       enum: Object.values(NotificationType),
@@ -56,6 +56,7 @@ const notificationSchema = new Schema<INotification>(
   { timestamps: true }
 );
 
+notificationSchema.index({ workspaceId: 1, eventId: 1 }, { unique: true });
 notificationSchema.index({ workspaceId: 1, status: 1 });
 notificationSchema.index({ workspaceId: 1, module: 1 });
 notificationSchema.index({ workspaceId: 1, read: 1 });
