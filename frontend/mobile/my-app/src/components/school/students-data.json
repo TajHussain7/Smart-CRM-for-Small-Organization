@@ -1,0 +1,7 @@
+[
+  {"id":"S102","name":"Alex Johnson","grade":"10th","status":"Paid","tone":"slate"},
+  {"id":"S105","name":"Sarah Williams","grade":"12th","status":"Pending","tone":"blue"},
+  {"id":"S112","name":"Marcus Chen","grade":"9th","status":"Paid","tone":"cyan"},
+  {"id":"S098","name":"Elena Rodriguez","grade":"11th","status":"Paid","tone":"slate"},
+  {"id":"S115","name":"Jordan Smith","grade":"10th","status":"Pending","tone":"blue"}
+]

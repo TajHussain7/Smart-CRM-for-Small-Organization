@@ -43,8 +43,7 @@
           "cameraPermission": false,
           "microphonePermission": false
         }
-      ],
-      "expo-secure-store"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
