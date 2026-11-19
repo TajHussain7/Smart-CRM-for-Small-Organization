@@ -1,2 +1,2 @@
-import AuthScreen from '../live/AuthScreen';
-export default function Screen(){return <AuthScreen register/>;}
+import AuthScreen from '@/components/auth-screen';
+export default function CreateWorkspaceScreen() { return <AuthScreen workspace />; }

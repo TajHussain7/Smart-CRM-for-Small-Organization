@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import SchoolWorkspace from './dashboard/SchoolWorkspace'
-import { login, register, logout } from './api/auth.js'
+import { saveWorkspace } from './workspace-store'
+import { saveAccount } from './account-store'
+import { login, register, logout, loginDemo } from './api/auth.js'
 import {
   useAuth,
-  getAuthState,
   setAuthSession,
   setAuthLoading,
   setAuthError,
   clearAuthSession,
 } from './auth-store.js'
-
-const getAuthKey = () => getAuthState().user?.id || getAuthState().user?._id
 
 // ─── SVG icon paths ───────────────────────────────────────────────────────────
 const paths = {
@@ -138,12 +137,16 @@ export default function App() {
         })
 
         // Sync local stores with backend response
+        saveAccount({ name: data.user.name, email: data.user.email, phone: '', address: '', bio: '', photo: '' })
+        saveWorkspace(data.workspace.name)
         setAuthSession(data.user, data.workspace)
         location.hash = '#school-dashboard'
       } else {
         // ── Login ──────────────────────────────────────────────────────────
         const { user, workspace } = await login({ email, password })
 
+        saveAccount({ name: user.name, email: user.email, phone: '', address: '', bio: '', photo: '' })
+        saveWorkspace(workspace?.name || 'My Workspace')
         setAuthSession(user, workspace)
         location.hash = '#school-dashboard'
       }
@@ -153,13 +156,41 @@ export default function App() {
     }
   }
 
+  // ─── Demo Workspace Handler ───────────────────────────────────────────────
+  async function handleDemoLogin() {
+    setNotice('')
+    setAuthError(null)
+    setAuthLoading(true)
+
+    try {
+      const { user, workspace } = await loginDemo()
+      saveAccount({ name: user.name, email: user.email, phone: '', address: '', bio: '', photo: '' })
+      saveWorkspace(workspace?.name || 'Demo Workspace')
+      setAuthSession(user, workspace)
+      location.hash = '#school-dashboard'
+    } catch (err) {
+      setAuthLoading(false)
+      setAuthError(err.message || 'Unable to access Demo Workspace. Please ensure demo data is loaded.')
+    }
+  }
+
   // ─── Route-based rendering ────────────────────────────────────────────────
   const handleLogout = () => {
     clearAuthSession()
     logout()
   }
 
-  if (isAuthenticated) return <SchoolWorkspace key={getAuthKey()} route={route} onLogout={handleLogout} />
+  if (isAuthenticated) {
+    if (route.startsWith('#school-') || route === '#students' || route.startsWith('#student/')) {
+      return <SchoolWorkspace route={route} onLogout={handleLogout} />
+    }
+    if (route.startsWith('#barber-')) {
+      return <SchoolWorkspace route={route} onLogout={handleLogout} />
+    }
+    if (route.startsWith('#gym-')) {
+      return <SchoolWorkspace route={route} onLogout={handleLogout} />
+    }
+  }
 
   // ─── Auth Shell (Login / Workspace Setup) ─────────────────────────────────
   return (
@@ -237,6 +268,15 @@ export default function App() {
             />
 
             <div className="password-field">
+              {!isWorkspacePage && (
+                <button
+                  type="button"
+                  className="forgot text-link"
+                  onClick={() => setNotice('Password recovery will be available soon.')}
+                >
+                  Forgot password?
+                </button>
+              )}
               <Field
                 label="Password"
                 id="password"
@@ -265,6 +305,12 @@ export default function App() {
               </fieldset>
             )}
 
+            {!isWorkspacePage && (
+              <label className="remember">
+                <input type="checkbox" />Remember me for 30 days
+              </label>
+            )}
+
             <button className="primary" type="submit" disabled={isLoading}>
               {isWorkspacePage ? 'Create Workspace' : 'Login'}
               {isLoading ? <Spinner /> : <Icon name={isWorkspacePage ? 'rocket' : 'arrow'} size={26} />}
@@ -279,13 +325,30 @@ export default function App() {
 
           {!isWorkspacePage && (
             <>
+              <div className="divider"><span />OR CONTINUE WITH<span /></div>
+              <button
+                className="google"
+                onClick={() => setNotice('Google sign-in will be available soon.')}
+              >
+                <span className="google-g">G</span>Sign in with Google
+              </button>
               <p className="footer">
                 Don&apos;t have a workspace? <a href="#create-workspace">Create one</a>
               </p>
             </>
           )}
 
-
+          <div className="auth-demo-action">
+            <button
+              type="button"
+              className="demo-btn"
+              disabled={isLoading}
+              onClick={handleDemoLogin}
+            >
+              <Icon name="rocket" size={18} />
+              <span>Explore Demo Workspace</span>
+            </button>
+          </div>
         </section>
 
         <footer className="auth-page-footer">Smart CRM · School Management Workspace</footer>

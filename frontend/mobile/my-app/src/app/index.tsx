@@ -1,2 +1,2 @@
-import AuthScreen from '../live/AuthScreen';
-export default AuthScreen;
+import AuthScreen from '@/components/auth-screen';
+export default function LoginScreen() { return <AuthScreen />; }
