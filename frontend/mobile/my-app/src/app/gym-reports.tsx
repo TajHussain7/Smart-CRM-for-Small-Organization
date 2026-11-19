@@ -1,2 +1,2 @@
-import { Redirect } from 'expo-router';
-export default function LegacyRoute(){return <Redirect href='/reports'/>;}
+import Workspace from '../live/Workspace';
+export default function Screen() { return <Workspace screen="gym-reports"/>; }

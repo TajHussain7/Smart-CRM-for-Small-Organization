@@ -1,2 +1,2 @@
-import StudentsScreen from '@/components/school/students-screen';
-export default function StudentsRoute() { return <StudentsScreen />; }
+import Workspace from '../live/Workspace';
+export default function Screen() { return <Workspace screen="students"/>; }

@@ -1,97 +1,19 @@
-/**
- * api/auth.js
- * Authentication & workspace API calls for the Smart CRM frontend.
- */
-
-import { request, setTokens, clearTokens } from './client.js';
-
-// ─── Register (creates user + workspace in one shot) ─────────────────────────
-/**
- * @param {{ name: string, email: string, password: string, businessName: string,
- *           schoolEnabled?: boolean, gymEnabled?: boolean, barberEnabled?: boolean }} input
- */
+import { request, setTokens, clearTokens } from './client.js'
+function persist(data) {
+  setTokens(data.accessToken, data.refreshToken)
+  localStorage.setItem('crm_user', JSON.stringify(data.user))
+  localStorage.setItem('crm_workspace', JSON.stringify(data.workspace))
+  return data
+}
 export async function register(input) {
-  const data = await request('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify(input),
-  });
-
-  // Persist tokens and session data immediately after registration
-  setTokens(data.accessToken, data.refreshToken);
-  persistSession(data.user, data.workspace);
-
-  return data;
+  return persist(await request('/auth/register', {method:'POST',body:JSON.stringify(input)}))
 }
-
-// ─── Login ───────────────────────────────────────────────────────────────────
-/**
- * @param {{ email: string, password: string }} credentials
- */
-export async function login(credentials) {
-  const data = await request('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify(credentials),
-  });
-
-  setTokens(data.accessToken, data.refreshToken);
-
-  // After login, fetch the workspace separately (login returns user + tokens)
-  const workspace = await getMyWorkspace();
-  persistSession(data.user, workspace);
-
-  return { user: data.user, workspace };
+export async function login(input) {
+  return persist(await request('/auth/login', {method:'POST',body:JSON.stringify(input)}))
 }
-
-// ─── Demo Workspace Login ─────────────────────────────────────────────────────
-export async function loginDemo() {
-  const data = await request('/auth/demo', {
-    method: 'POST',
-  });
-
-  setTokens(data.accessToken, data.refreshToken);
-  persistSession(data.user, data.workspace);
-
-  return { user: data.user, workspace: data.workspace };
-}
-
-// ─── Logout ──────────────────────────────────────────────────────────────────
-export function logout() {
-  clearTokens();
-  window.location.hash = '#login';
-}
-
-// ─── Get current user (from token) ───────────────────────────────────────────
-export async function getCurrentUser() {
-  return request('/auth/me');
-}
-
-// ─── Get workspace for the authenticated user ─────────────────────────────────
-export async function getMyWorkspace() {
-  return request('/workspaces/me');
-}
-
-// ─── Refresh access token ─────────────────────────────────────────────────────
-export async function refreshToken(token) {
-  return request('/auth/refresh', {
-    method: 'POST',
-    body: JSON.stringify({ refreshToken: token }),
-  });
-}
-
-// ─── Persist session to localStorage ─────────────────────────────────────────
-function persistSession(user, workspace) {
-  if (user) localStorage.setItem('crm_user', JSON.stringify(user));
-  if (workspace) localStorage.setItem('crm_workspace', JSON.stringify(workspace));
-}
-
-// ─── Restore session from localStorage ───────────────────────────────────────
+export function logout() { clearTokens(); window.location.hash = '#login' }
+export const getMyWorkspace = () => request('/workspaces/me')
 export function getStoredSession() {
-  try {
-    const user = JSON.parse(localStorage.getItem('crm_user') || 'null');
-    const workspace = JSON.parse(localStorage.getItem('crm_workspace') || 'null');
-    return { user, workspace };
-  } catch {
-    return { user: null, workspace: null };
-  }
+  try { return { user:JSON.parse(localStorage.getItem('crm_user') || 'null'), workspace:JSON.parse(localStorage.getItem('crm_workspace') || 'null') } }
+  catch { return {user:null,workspace:null} }
 }
-

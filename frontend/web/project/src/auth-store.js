@@ -60,3 +60,9 @@ export function clearAuthSession() {
   emit();
 }
 
+
+window.addEventListener('crm-session-cleared', () => {
+  state = { user:null, workspace:null, isAuthenticated:false, isLoading:false, error:null }
+  emit()
+})
+window.addEventListener('storage', () => { state = buildInitialState(); emit() })

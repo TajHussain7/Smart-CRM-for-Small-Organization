@@ -1,2 +1,2 @@
-import SchoolDashboard from '@/components/school/school-dashboard';
-export default function SchoolDashboardRoute() { return <SchoolDashboard />; }
+import Workspace from '../live/Workspace';
+export default function Screen() { return <Workspace screen="school-dashboard"/>; }
