@@ -1,2 +1,3 @@
-import { Redirect } from 'expo-router';
-export default function LegacyMember(){return <Redirect href='/students'/>;}
+import { useLocalSearchParams } from 'expo-router';
+import Workspace from '../../live/Workspace';
+export default function Screen(){const {id}=useLocalSearchParams<{id:string}>();return <Workspace screen="gym-members" detailId={id}/>;}
