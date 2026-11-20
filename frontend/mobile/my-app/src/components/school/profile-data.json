@@ -1,0 +1,10 @@
+{
+  "student": {"name":"Marcus Thompson","id":"STU-2024-089","birthDate":"May 14, 2009","age":"15 Years","grade":"10th Grade - Section B","address":"422 Oakwood Dr, Springfield, IL","guardian":"Sarah Thompson","relationship":"Mother","phone":"+1 (555) 012-3456","email":"sarah.t@example.com"},
+  "attendance": {"total":182,"present":171,"absent":8,"late":3,"rate":94,"days":["Present","Present","Absent","Present","Present","Late","Present"]},
+  "fees": [
+    {"id":"OCT-2023","date":"Oct 05, 2023","description":"Monthly Tuition - Oct","amount":450,"status":"Paid"},
+    {"id":"SEP-2023","date":"Sep 04, 2023","description":"Monthly Tuition - Sep","amount":450,"status":"Paid"},
+    {"id":"AUG-2023","date":"Aug 15, 2023","description":"Annual Resource Fee","amount":120,"status":"Paid"},
+    {"id":"NOV-2023","date":"Nov 01, 2023","description":"Monthly Tuition - Nov","amount":450,"status":"Pending"}
+  ]
+}

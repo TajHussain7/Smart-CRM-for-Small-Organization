@@ -1,0 +1,15 @@
+import { Text, TextInput } from '@/components/responsive-text';
+import { useState } from 'react';
+import { router } from 'expo-router';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { addTeacher } from './teachers-store';
+export default function AddTeacherButton() {
+  const [open,setOpen]=useState(false);
+  const [name,setName]=useState('');
+  const [email,setEmail]=useState('');
+  const [subject,setSubject]=useState('');
+  const [error,setError]=useState('');
+  function save(){const result=addTeacher({name,email,subject});if(result.error){setError(result.error);return;}setOpen(false);router.push({pathname:'/teacher-timetable',params:{teacherId:result.teacher!.id}});}
+  return <><Pressable accessibilityRole="button" style={s.button} onPress={()=>{setName('');setEmail('');setSubject('');setError('');setOpen(true);}}><Text style={s.buttonText}>＋ Add Teacher</Text></Pressable><Modal visible={open} transparent animationType="fade" onRequestClose={()=>setOpen(false)}><KeyboardAvoidingView style={s.overlay} behavior={Platform.OS==='ios'?'padding':'height'}><View style={s.dialog} accessibilityViewIsModal><View style={s.row}><Text style={s.title}>Add Teacher</Text><Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={()=>setOpen(false)} style={s.close}><Text>✕</Text></Pressable></View><ScrollView keyboardShouldPersistTaps="handled"><Text style={s.note}>Add teacher information, then schedule their timetable. Demo session only.</Text><Text style={s.label}>Full name</Text><TextInput accessibilityLabel="Teacher full name" style={s.input} value={name} onChangeText={setName} maxLength={100}/><Text style={s.label}>Email</Text><TextInput accessibilityLabel="Teacher email" style={s.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" maxLength={100}/><Text style={s.label}>Subject / Speciality</Text><TextInput accessibilityLabel="Teacher subject" style={s.input} value={subject} onChangeText={setSubject} maxLength={100}/>{!!error&&<Text accessibilityRole="alert" style={s.error}>{error}</Text>}<Pressable accessibilityRole="button" style={s.button} onPress={save}><Text style={s.buttonText}>Add Teacher & Open Timetable</Text></Pressable></ScrollView></View></KeyboardAvoidingView></Modal></>;
+}
+const s=StyleSheet.create({button:{backgroundColor:'#0754d5',padding:15,borderRadius:9,alignItems:'center',justifyContent:'center',minHeight:50},buttonText:{color:'white',fontSize:14,fontWeight:'600'},overlay:{flex:1,backgroundColor:'#12213a66',padding:20,alignItems:'center',justifyContent:'center'},dialog:{backgroundColor:'white',padding:22,borderRadius:14,width:'100%',maxWidth:450,maxHeight:'85%'},row:{flexDirection:'row',alignItems:'center',justifyContent:'space-between'},title:{fontSize:21,color:'#253246'},close:{padding:12},note:{color:'#758197',fontSize:13,lineHeight:20,marginVertical:16},label:{color:'#59677e',fontSize:12,marginBottom:6},input:{borderWidth:1,borderColor:'#cdd6e6',borderRadius:8,padding:12,minHeight:46,marginBottom:16,color:'#273447'},error:{color:'#ba3442',marginBottom:14}});
