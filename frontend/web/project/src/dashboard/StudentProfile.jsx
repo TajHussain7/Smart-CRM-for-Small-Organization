@@ -1,14 +1,16 @@
+import { readStudentNotes, updateStudentAddress } from './student-notes'
 import { useEffect, useRef, useState } from 'react'
 import Icon from './SchoolIcon'
-import { getStudentById, updateStudent } from '../api/school.js'
-import { updateStudent as updateStoreStudent } from './students-store'
+import { getStudentById, updateStudent, deleteStudent } from '../api/school.js'
+import { updateStudent as updateStoreStudent, removeStudent } from './students-store'
+import { studentGrades, studentClassLevel } from './student-fields'
 import './dashboard.css'
 import './students.css'
 import './profile.css'
 
 const fields = [
   ['name', 'Student name'],
-  ['grade', 'Grade / Section'],
+  ['grade', 'Grade'],
   ['notes', 'Address / Notes'],
   ['guardianName', 'Guardian name'],
   ['guardianPhone', 'Guardian Phone'],
@@ -42,7 +44,11 @@ function EditDialog({ student, close, onSaved }) {
     }
 
     try {
-      const updated = await updateStudent(student.studentId || student.id, values)
+      values.notes = updateStudentAddress(student.notes, values.notes)
+      values.monthlyFee = Number(values.monthlyFee)
+      values.classLevel = studentClassLevel(values.grade)
+      if (!values.guardianEmail) delete values.guardianEmail
+      const updated = await updateStudent(student._id || student.studentId || student.id, values)
       updateStoreStudent(student.studentId || student.id, updated)
       onSaved(updated)
     } catch (err) {
@@ -63,15 +69,18 @@ function EditDialog({ student, close, onSaved }) {
         {fields.map(([key, label]) => (
           <label key={key}>
             {label}
-            <input
+            {key === 'grade' ? <select name="grade" defaultValue={student.grade}>{!studentGrades.includes(student.grade) && <option value={student.grade} disabled>{student.grade} (unsupported)</option>}{studentGrades.map(grade => <option key={grade}>{grade}</option>)}</select> : <input
               name={key}
-              defaultValue={student[key] || student[key === 'guardianName' ? 'guardian' : key === 'guardianPhone' ? 'phone' : key === 'guardianEmail' ? 'email' : ''] || ''}
-              required={key === 'name' || key === 'grade'}
+              defaultValue={key === 'notes' ? readStudentNotes(student.notes).address : student[key] || student[key === 'guardianName' ? 'guardian' : key === 'guardianPhone' ? 'phone' : key === 'guardianEmail' ? 'email' : ''] || ''}
+              required={['name', 'guardianName', 'guardianPhone'].includes(key) || (key === 'guardianEmail' && !!student.guardianEmail)}
+              minLength={key === 'guardianPhone' ? 10 : ['name', 'guardianName'].includes(key) ? 2 : undefined}
               maxLength={120}
               type={key.includes('Email') ? 'email' : key.includes('Phone') ? 'tel' : 'text'}
-            />
+            />}
           </label>
         ))}
+        <label>Section<select name="section" defaultValue={student.section}><option>A</option><option>B</option></select></label>
+        <label>Monthly fee<input name="monthlyFee" type="number" min="0" required defaultValue={student.monthlyFee} /></label>
         {error && <p role="alert" className="g-error" style={{ color: '#d32f2f' }}>{error}</p>}
         <button className="student-submit" disabled={loading}>
           {loading ? 'Saving...' : 'Save Changes'}
@@ -86,6 +95,9 @@ export default function SelectedStudentProfile({ studentId }) {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [notice, setNotice] = useState('')
+  const [error, setError] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [reload, setReload] = useState(0)
 
   useEffect(() => {
     let mounted = true
@@ -97,11 +109,12 @@ export default function SelectedStudentProfile({ studentId }) {
       })
       .catch(err => {
         if (!mounted) return
-        console.error('Failed to fetch student:', err)
+        setStudent(null)
+        setError(err.message || 'Unable to load student.')
         setLoading(false)
       })
     return () => { mounted = false }
-  }, [studentId])
+  }, [studentId, reload])
 
   if (loading) {
     return (
@@ -117,8 +130,9 @@ export default function SelectedStudentProfile({ studentId }) {
     return (
       <main className="profile-main">
         <section className="profile-card">
-          <h1>Student not found</h1>
-          <p>No student with ID &ldquo;{studentId}&rdquo; was found.</p>
+          <h1>Unable to load student</h1>
+          <p role="alert">{error || 'Student not found.'}</p>
+          <button onClick={() => { setLoading(true); setError(''); setReload(value => value + 1) }}>Retry</button>
           <a href="#students">← Back to Students</a>
         </section>
       </main>
@@ -129,7 +143,7 @@ export default function SelectedStudentProfile({ studentId }) {
   const guardian = student.guardianName || student.guardian || 'Not provided'
   const phone = student.guardianPhone || student.phone || 'Not provided'
   const email = student.guardianEmail || student.email || 'Not provided'
-  const address = student.notes || student.address || 'Not provided'
+  const address = readStudentNotes(student.notes).address || 'Not provided'
   const feeStatus = student.feeStatus || student.status || 'Pending'
 
   return (
@@ -162,7 +176,7 @@ export default function SelectedStudentProfile({ studentId }) {
               {[
                 ['CLASS / GRADE', student.grade],
                 ['SECTION', student.section || 'A'],
-                ['MONTHLY FEE', student.monthlyFee ? `Rs. ${student.monthlyFee.toLocaleString()}` : 'Rs. 5,000'],
+                ['MONTHLY FEE', `Rs. ${(student.monthlyFee ?? 0).toLocaleString()}`],
                 ['ADDRESS', address],
               ].map(([label, value]) => (
                 <div key={label}>
@@ -196,10 +210,17 @@ export default function SelectedStudentProfile({ studentId }) {
             <span className={`fee-status ${feeStatus.toLowerCase()}`}>{feeStatus}</span>
           </div>
           <p className="school-detail-note">
-            Monthly fee: Rs. {(student.monthlyFee || 5000).toLocaleString()}. Current invoice status: {feeStatus}.
+            Monthly fee: Rs. {(student.monthlyFee ?? 0).toLocaleString()}. Current invoice status: {feeStatus}.
           </p>
         </section>
 
+        {error && <p role="alert" className="student-error">{error}</p>}
+        <button className="profile-button" disabled={deleting} onClick={async () => {
+          if (!window.confirm(`Delete ${student.name} (${id})? This cannot be undone.`)) return
+          setDeleting(true); setError('')
+          try { await deleteStudent(student._id || id); removeStudent(id); location.hash = '#students' }
+          catch (err) { setError(err.message || 'Unable to delete student.'); setDeleting(false) }
+        }}>{deleting ? 'Deleting...' : 'Delete Student'}</button>
         {notice && <p className="student-notice" role="status">{notice}</p>}
       </main>
 

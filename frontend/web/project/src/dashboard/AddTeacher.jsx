@@ -1,20 +1,29 @@
 import { useEffect, useRef, useState } from 'react'
-import { createTeacher } from '../api/school.js'
+import { createTeacher, updateTeacher, getTeacherById } from '../api/school.js'
 import { addTeacher } from './teachers-store'
 
-export default function AddTeacher({ onCreated }) {
+export default function AddTeacher({ onCreated, teacher }) {
   const [open, setOpen] = useState(false)
+  const [details, setDetails] = useState(null)
+  const [opening, setOpening] = useState(false)
+  const [openError, setOpenError] = useState('')
   return (
     <>
-      <button type="button" className="g-button secondary" onClick={() => setOpen(true)}>
-        ＋ Add Teacher
+      <button type="button" className="g-button secondary" disabled={opening} onClick={async () => {
+        setOpening(true); setOpenError('')
+        try { if (teacher) setDetails(await getTeacherById(teacher._id)); setOpen(true) }
+        catch (err) { setOpenError(err.message || 'Unable to load teacher.') }
+        finally { setOpening(false) }
+      }}>
+        {teacher ? 'Edit Teacher' : '＋ Add Teacher'}
       </button>
-      {open && <TeacherDialog close={() => setOpen(false)} onCreated={onCreated} />}
+      {openError && <p role="alert" className="student-error">{openError}</p>}
+      {open && <TeacherDialog teacher={teacher ? details : null} close={() => setOpen(false)} onCreated={onCreated} />}
     </>
   )
 }
 
-function TeacherDialog({ close, onCreated }) {
+function TeacherDialog({ close, onCreated, teacher }) {
   const ref = useRef(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -27,6 +36,7 @@ function TeacherDialog({ close, onCreated }) {
 
   async function save(event) {
     event.preventDefault()
+    if (loading) return
     setError('')
     setLoading(true)
 
@@ -36,18 +46,19 @@ function TeacherDialog({ close, onCreated }) {
     const subject = form.get('subject')?.trim()
     const phone = form.get('phone')?.trim()
 
-    if (!name || !email || !subject) {
+    if (name.length < 2 || !email || !subject) {
       setLoading(false)
       setError('Name, email and subject are required.')
       return
     }
 
     try {
-      const created = await createTeacher({ name, email, subject, phone: phone || undefined })
-      addTeacher({ name, email, subject, phone, id: created._id || created.id })
+      const input = { name, email, subject, phone }
+      const created = teacher ? await updateTeacher(teacher._id, input) : await createTeacher(input)
+      addTeacher(created)
       if (onCreated) onCreated(created)
       close()
-      location.hash = `#school-timetable/${created._id || created.id}`
+      if (!teacher) location.hash = `#school-timetable/${created._id || created.id}`
     } catch (err) {
       setLoading(false)
       setError(err.message || 'Failed to add teacher.')
@@ -55,31 +66,31 @@ function TeacherDialog({ close, onCreated }) {
   }
 
   return (
-    <dialog ref={ref} className="school-dialog" aria-label="Add Teacher" onCancel={close}>
+    <dialog ref={ref} className="school-dialog" aria-label={teacher ? "Edit Teacher" : "Add Teacher"} onCancel={close}>
       <div className="school-panel-heading">
-        <h2>Add Teacher</h2>
+        <h2>{teacher ? 'Edit Teacher' : 'Add Teacher'}</h2>
         <button className="school-icon-button" aria-label="Close" onClick={close}>×</button>
       </div>
       <form className="student-form" onSubmit={save}>
         <label>
           Full Name
-          <input name="name" required maxLength={100} placeholder="e.g. Tariq Mehmood" />
+          <input name="name" defaultValue={teacher?.name} minLength={2} required maxLength={100} placeholder="e.g. Tariq Mehmood" />
         </label>
         <label>
           Email Address
-          <input name="email" required type="email" maxLength={100} placeholder="e.g. tariq@school.edu.pk" />
+          <input name="email" defaultValue={teacher?.email} required type="email" maxLength={100} placeholder="e.g. tariq@school.edu.pk" />
         </label>
         <label>
           Subject / Speciality
-          <input name="subject" required maxLength={100} placeholder="e.g. Mathematics" />
+          <input name="subject" defaultValue={teacher?.subject} required maxLength={100} placeholder="e.g. Mathematics" />
         </label>
         <label>
           Phone Number
-          <input name="phone" type="tel" maxLength={20} placeholder="e.g. 03001234567" />
+          <input name="phone" defaultValue={teacher?.phone} type="tel" maxLength={20} placeholder="e.g. 03001234567" />
         </label>
         {error && <p role="alert" className="student-error" style={{ color: '#d32f2f' }}>{error}</p>}
         <button className="student-submit" disabled={loading}>
-          {loading ? 'Adding Teacher...' : 'Add Teacher & Open Timetable'}
+          {loading ? 'Saving...' : teacher ? 'Save Teacher' : 'Add Teacher & Open Timetable'}
         </button>
       </form>
     </dialog>

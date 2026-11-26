@@ -8,7 +8,7 @@
  * - On refresh failure, clears the session and redirects to login.
  */
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+const BASE_URL = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
 export function getAccessToken() {
@@ -20,97 +20,60 @@ export function getRefreshToken() {
 }
 
 export function setTokens(accessToken, refreshToken) {
+  sessionVersion++;
   localStorage.setItem('crm_access_token', accessToken);
   if (refreshToken) localStorage.setItem('crm_refresh_token', refreshToken);
 }
 
 export function clearTokens() {
+  sessionVersion++;
   localStorage.removeItem('crm_access_token');
   localStorage.removeItem('crm_refresh_token');
   localStorage.removeItem('crm_user');
   localStorage.removeItem('crm_workspace');
+  window.dispatchEvent(new Event('crm-session-cleared'));
 }
 
-// ─── Token refresh ────────────────────────────────────────────────────────────
-let isRefreshing = false;
-let refreshSubscribers = [];
-
-function onRefreshed(token) {
-  refreshSubscribers.forEach((cb) => cb(token));
-  refreshSubscribers = [];
-}
-
+// A single refresh promise settles all concurrent requests, including failures.
+let refreshing = null
+let sessionVersion = 0
 async function attemptRefresh() {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) throw new Error('No refresh token available');
-
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) throw new ApiError(401, 'Please log in again.')
+  const version = sessionVersion
   const res = await fetch(`${BASE_URL}/auth/refresh`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken }),
-  });
-
-  if (!res.ok) throw new Error('Refresh failed');
-
-  const json = await res.json();
-  const newAccessToken = json.data?.accessToken;
-  if (!newAccessToken) throw new Error('No access token in refresh response');
-
-  setTokens(newAccessToken, null);
-  return newAccessToken;
+  })
+  const data = await parseResponse(res)
+  if (!data.accessToken || version !== sessionVersion) throw new ApiError(401, 'Session changed. Please log in again.')
+  localStorage.setItem('crm_access_token', data.accessToken)
 }
-
-// ─── Main request function ────────────────────────────────────────────────────
-/**
- * @param {string} path       - e.g. '/auth/login' (without base URL)
- * @param {RequestInit} opts  - standard fetch options
- * @returns {Promise<any>}    - parsed JSON data field, or throws ApiError
- */
-export async function request(path, opts = {}) {
-  const url = `${BASE_URL}${path}`;
-  const accessToken = getAccessToken();
-
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(opts.headers || {}),
-    ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-  };
-
-  const response = await fetch(url, { ...opts, headers });
-
-  // ── Silent token refresh on 401 ──────────────────────────────────────────
-  if (response.status === 401 && !path.includes('/auth/')) {
-    if (!isRefreshing) {
-      isRefreshing = true;
-      try {
-        const newToken = await attemptRefresh();
-        isRefreshing = false;
-        onRefreshed(newToken);
-        // Retry the original request with the new token
-        return request(path, opts);
-      } catch {
-        isRefreshing = false;
-        clearTokens();
-        window.location.hash = '#login';
-        throw new ApiError(401, 'Session expired. Please log in again.');
+export async function request(path, opts = {}, retried = false) {
+  const version = sessionVersion
+  const token = getAccessToken()
+  const response = await fetch(`${BASE_URL}${path}`, { ...opts, headers: {
+    'Content-Type': 'application/json', ...opts.headers,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  } })
+  if (version !== sessionVersion) throw new ApiError(401, 'Session changed. Please retry.')
+  if (response.status === 401 && !path.startsWith('/auth/')) {
+    try {
+      if (retried) throw new ApiError(401, 'Session expired. Please log in again.')
+      if (token === getAccessToken()) {
+        if (!refreshing) refreshing = attemptRefresh().finally(() => { refreshing = null })
+        await refreshing
       }
+      return request(path, opts, true)
+    } catch (error) {
+      if (error.status === 401 && version === sessionVersion) {
+        clearTokens()
+        window.location.hash = '#login'
+      }
+      throw error
     }
-
-    // If a refresh is already in flight, queue this request
-    return new Promise((resolve, reject) => {
-      refreshSubscribers.push((token) => {
-        const retryHeaders = {
-          ...headers,
-          Authorization: `Bearer ${token}`,
-        };
-        fetch(url, { ...opts, headers: retryHeaders })
-          .then((r) => parseResponse(r).then(resolve).catch(reject))
-          .catch(reject);
-      });
-    });
   }
-
-  return parseResponse(response);
+  return parseResponse(response)
 }
 
 async function parseResponse(response) {

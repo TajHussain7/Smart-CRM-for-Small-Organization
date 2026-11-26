@@ -1,0 +1,13 @@
+import { request } from './client';
+export type TeacherInput = { name: string; email: string; subject: string; phone?: string };
+export type TeacherRecord = TeacherInput & { _id: string };
+export type ScheduleInput = { teacherId: string; subject: string; classLevel: string; section: string; dayOfWeek: string; startTime: string; endTime: string };
+export type ScheduleRecord = Omit<ScheduleInput, 'teacherId'> & { _id: string; teacherId: string | { _id: string; name: string; email: string } | null };
+export const getTeachers = (search = '') => request<TeacherRecord[]>('/school/teachers' + (search ? '?search=' + encodeURIComponent(search) : ''));
+export const getTeacher = (id: string) => request<TeacherRecord>('/school/teachers/' + encodeURIComponent(id));
+export const createTeacher = (input: TeacherInput) => request<TeacherRecord>('/school/teachers', { method: 'POST', body: JSON.stringify(input) });
+export const updateTeacher = (id: string, input: TeacherInput) => request<TeacherRecord>('/school/teachers/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify(input) });
+export const deleteTeacher = (id: string) => request<TeacherRecord>('/school/teachers/' + encodeURIComponent(id), { method: 'DELETE' });
+export const getSchedule = () => request<ScheduleRecord[]>('/school/schedule');
+export const getScheduleByClass = (classLevel: string, section: string) => request<ScheduleRecord[]>(`/school/schedule/class/${encodeURIComponent(classLevel)}/section/${encodeURIComponent(section)}`);
+export const createSchedule = (input: ScheduleInput) => request<ScheduleRecord>('/school/schedule', { method: 'POST', body: JSON.stringify(input) });

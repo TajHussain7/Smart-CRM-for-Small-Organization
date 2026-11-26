@@ -1,3 +1,4 @@
+import { studentGrades } from '@/api/students';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { router } from 'expo-router';
@@ -6,6 +7,7 @@ import { WorkspacePage, Select, ui } from '@/components/workspace-ui';
 import { admitStudent, type Admission } from '@/components/school/admission-store';
 
 const empty: Admission = {
+  monthlyFee: '',
   name: '',
   grade: '',
   section: '',
@@ -19,7 +21,7 @@ const empty: Admission = {
   address: ''
 };
 
-const classes = ['Play Group', 'Nursery', 'KG I', 'KG II', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
+const classes = studentGrades;
 const sections = ['Section A (Boys)', 'Section B (Girls)'];
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const genders = ['Male', 'Female', 'Other'];
@@ -27,6 +29,7 @@ const genders = ['Male', 'Female', 'Other'];
 export default function AdmissionPage() {
   const [draft, setDraft] = useState<Admission>(empty);
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   return (
     <WorkspacePage title="Student Admission">
@@ -133,17 +136,21 @@ export default function AdmissionPage() {
             autoCapitalize="words"
           />
         </View>
+        <View style={{ gap: 8 }}><Text>Monthly Fee (PKR)</Text><TextInput accessibilityLabel="Monthly Fee" style={ui.input} value={draft.monthlyFee} onChangeText={monthlyFee => setDraft({ ...draft, monthlyFee })} keyboardType="numeric" placeholder="Enter monthly fee" /></View>
       </View>
       {!!error && <Text accessibilityRole="alert" style={{ color: '#ba3442' }}>{error}</Text>}
       <Pressable
         style={ui.button}
-        onPress={() => {
-          const issue = admitStudent(draft);
-          if (issue) setError(issue);
-          else router.replace({ pathname: '/student/[id]', params: { id: (draft.id || '').trim() } });
+        disabled={saving}
+        onPress={async () => {
+          if (saving) return;
+          setSaving(true); setError('');
+          try { const student = await admitStudent(draft); router.replace({ pathname: '/student/[id]', params: { id: student._id } }); }
+          catch (error) { setError(error instanceof Error ? error.message : 'Unable to admit student.'); }
+          finally { setSaving(false); }
         }}
       >
-        <Text style={ui.white}>Admit Student</Text>
+        <Text style={ui.white}>{saving ? 'Admitting...' : 'Admit Student'}</Text>
       </Pressable>
     </WorkspacePage>
   );
