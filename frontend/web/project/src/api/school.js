@@ -24,7 +24,7 @@ export async function getStudents(params = {}) {
 }
 
 export async function getStudentById(id) {
-  return request(`/school/students/${id}`);
+  return request(`/school/students/${encodeURIComponent(id)}`);
 }
 
 export async function createStudent(data) {
@@ -35,14 +35,14 @@ export async function createStudent(data) {
 }
 
 export async function updateStudent(id, data) {
-  return request(`/school/students/${id}`, {
+  return request(`/school/students/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
 }
 
 export async function deleteStudent(id) {
-  return request(`/school/students/${id}`, {
+  return request(`/school/students/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   });
 }
@@ -54,7 +54,7 @@ export async function getTeachers(search = '') {
 }
 
 export async function getTeacherById(id) {
-  return request(`/school/teachers/${id}`);
+  return request(`/school/teachers/${encodeURIComponent(id)}`);
 }
 
 export async function createTeacher(data) {
@@ -65,14 +65,14 @@ export async function createTeacher(data) {
 }
 
 export async function updateTeacher(id, data) {
-  return request(`/school/teachers/${id}`, {
+  return request(`/school/teachers/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
 }
 
 export async function deleteTeacher(id) {
-  return request(`/school/teachers/${id}`, {
+  return request(`/school/teachers/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   });
 }
@@ -119,3 +119,7 @@ export async function getPayments() {
   return request('/school/invoices/payments');
 }
 
+
+export function getScheduleByClass(classLevel, section) {
+  return request(`/school/schedule/class/${encodeURIComponent(classLevel)}/section/${encodeURIComponent(section)}`)
+}

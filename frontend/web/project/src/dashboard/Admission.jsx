@@ -2,12 +2,7 @@ import { useState } from 'react'
 import { createStudent } from '../api/school.js'
 import { addStudent } from './students-store'
 
-const classLevelMap = {
-  '9th': 'NINE',
-  '10th': 'TEN',
-  '11th': 'TEN',
-  '12th': 'TEN',
-}
+import { studentGrades, studentClassLevel } from './student-fields'
 
 export default function Admission() {
   const [error, setError] = useState('')
@@ -26,7 +21,7 @@ export default function Admission() {
     const guardian = value.guardian?.trim()
     const phone = value.phone?.trim()
     const email = value.email?.trim()
-    const fee = Number(value.fee) || 5000
+    const fee = Number(value.fee)
     const address = value.address?.trim()
 
     if (!id || !name || !grade || !guardian || !phone) {
@@ -40,8 +35,8 @@ export default function Admission() {
         studentId: id,
         name,
         grade,
-        classLevel: classLevelMap[grade] || 'TEN',
-        section: 'A',
+        classLevel: studentClassLevel(grade),
+        section: value.section,
         guardianName: guardian,
         guardianPhone: phone,
         guardianEmail: email || undefined,
@@ -69,15 +64,15 @@ export default function Admission() {
           </label>
           <label>
             Full Name
-            <input name="name" required placeholder="e.g. Ali Raza" />
+            <input name="name" minLength={2} required placeholder="e.g. Ali Raza" />
           </label>
           <label>
             Parent / Guardian
-            <input name="guardian" required placeholder="e.g. Muhammad Raza" />
+            <input name="guardian" minLength={2} required placeholder="e.g. Muhammad Raza" />
           </label>
           <label>
             Guardian Phone
-            <input name="phone" type="tel" required placeholder="e.g. 03001234567" />
+            <input name="phone" type="tel" minLength={10} required placeholder="e.g. 03001234567" />
           </label>
           <label>
             Guardian Email
@@ -95,11 +90,12 @@ export default function Admission() {
             Class / Grade
             <select name="grade" required defaultValue="">
               <option value="" disabled>Select class</option>
-              {['9th', '10th', '11th', '12th'].map(g => (
+              {studentGrades.map(g => (
                 <option key={g} value={g}>{g}</option>
               ))}
             </select>
           </label>
+          <label>Section<select name="section" defaultValue="A"><option>A</option><option>B</option></select></label>
         </div>
         {error && <p className="g-error" role="alert" style={{ color: '#d32f2f', marginTop: 12 }}>{error}</p>}
         <button className="g-button" disabled={loading} style={{ marginTop: 16 }}>

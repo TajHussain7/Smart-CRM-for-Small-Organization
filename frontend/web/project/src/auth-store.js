@@ -1,3 +1,5 @@
+import { clearTeachers } from './dashboard/teachers-store'
+import { setStudents } from './dashboard/students-store'
 /**
  * auth-store.js
  * Global authentication state using useSyncExternalStore.
@@ -40,6 +42,8 @@ export function useAuth() {
 
 // ─── State mutators (called after API calls in App.jsx) ───────────────────────
 export function setAuthSession(user, workspace) {
+  setStudents([])
+  clearTeachers()
   state = { user, workspace, isAuthenticated: true, isLoading: false, error: null };
   emit();
 }
@@ -55,8 +59,17 @@ export function setAuthError(error) {
 }
 
 export function clearAuthSession() {
+  setStudents([])
+  clearTeachers()
   clearTokens();
   state = { user: null, workspace: null, isAuthenticated: false, isLoading: false, error: null };
   emit();
 }
 
+
+window.addEventListener('crm-session-cleared', () => {
+  setStudents([])
+  clearTeachers()
+  state = { user: null, workspace: null, isAuthenticated: false, isLoading: false, error: null }
+  emit()
+})
